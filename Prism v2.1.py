@@ -1,29 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
-# 导入库
-
-# 开机启动动画
-# 加载动画
-# https://www.jb51.net/article/209222.htm
 import time
 from tkinter.filedialog import * # 不提前引用会导致第一次运行失败？
 from tkinter import *
 from tkinter import ttk
 
-# start_root = Tk()
-# start_root.geometry('300x200')
-# start_root.title('启动中')
-# progressbarOne = ttk.Progressbar(start_root,length=200)
-# progressbarOne.pack(pady=40)
-# # 进度值最大值
-# progressbarOne['maximum'] = 100
-# # 进度值初始值
-# progressbarOne['value'] = 0
-# Label(start_root,text='正在加载中...').pack()
 
 
 # 系统设计所需库
@@ -34,12 +16,6 @@ from ctypes import windll
 from PIL import Image, ImageTk
 from sqlalchemy import create_engine
 
-# for i in range(20):
-#     # 每次更新加1
-#     progressbarOne['value'] = i + 1
-#     # 更新画面
-#     start_root.update()
-#     time.sleep(0.02)
     
 from PIL import Image, ImageTk
 import xlwt
@@ -52,11 +28,7 @@ from matplotlib.figure import Figure
 plt.rcParams['font.family'] = ['Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-# for i in range(20,50):
-#     progressbarOne['value'] = i + 1
-#     start_root.update()
-#     time.sleep(0.02)
-    
+
 # 系统逻辑所需库
 import re
 import xlrd
@@ -88,13 +60,16 @@ import decimal
 import warnings
 warnings.filterwarnings('ignore')
 
+# Jeffrey - 添加其他文件中的python
+from prism_database_operation import PrismDatabaseOperation
+
 
 # Master表信息维护
 class MasterData:
     # 查询code数据
     def master_search():
         SQL_SELECT = "SELECT Material FROM ProductMaster"
-        material = Prism_db.Prism_select(SQL_SELECT).values
+        material = PrismDatabaseOperation.Prism_select(SQL_SELECT).values
         return material
     
     # 主数据校验,校验是否存在，若否，则返回相应code
@@ -105,31 +80,16 @@ class MasterData:
             return 0
         else:
             return lack_code
-    
-    # 添加数据（数据校验修改前后是否存在重复，直接通过Prism_db添加df即可）
-    def master_insert():
-        pass
-        
-    # 直接通过Prism_db添加df即可
-    def master_insert_batch():
-        pass
 
     # 修改数据（数据校验修改前后是否存在重复）
     def master_update(item_text):
-#         print(item_text)
+        #print(item_text)
         # 数据修改窗口
         item_text = item_text
         modify_master = Tk()
         modify_master.title('主数据修改')
         modify_master.geometry('1050x250')
-        # 提高清晰度
-#         # 告诉操作系统使用程序自身的dpi适配
-#         ctypes.windll.shcore.SetProcessDpiAwareness(1)
-#         # 获取屏幕的缩放因子
-#         ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
-#         # 设置程序缩放 75%
-#         modify_master.tk.call('tk', 'scaling', ScaleFactor/75)
-        
+
         # 获取主数据列名
         columns = ['规格型号','包装规格','分类Level3','分类Level4','ABC','分类','不含税单价',
                    '预测状态','MOQ','安全库存天数']
@@ -152,12 +112,12 @@ class MasterData:
             column = modify_treeview.identify_column(event.x)# 所在列
             row = modify_treeview.identify_row(event.y)# 所在行，返回
             cn = int(str(column).replace('#',''))
-#             rn = int(str(row).replace('I',''))
-#             print(row,rn,column,cn)
+            #             rn = int(str(row).replace('I',''))
+            #             print(row,rn,column,cn)
             entryedit = Entry(modify_master,width=13)
             entryedit.insert(0,str(item_text[cn-1]))
             entryedit.place(x=150, y=150)
-#             entryedit.place(x=20+(cn-1)*100, y=45) # 点击相应地方进行修改
+            #             entryedit.place(x=20+(cn-1)*100, y=45) # 点击相应地方进行修改
             Label_select = Label(modify_master,text=str(item_text[cn-1]),width=20,anchor="w")
             Label_select.place(x=150, y=100)
             # 将编辑好的信息更新到数据库中
@@ -182,23 +142,17 @@ class MasterData:
             btn_cancal = Button(modify_master, text='Cancel', width=7, command=cancal_edit)
             btn_cancal.place(x=350,y=150)
             
-
         # 触发双击事件
         modify_treeview.bind('<Double-1>', set_value)
 
         # 显示文本数据
-        Label(modify_master,text="Tips：包装规格、不含税单价、MOQ、安全库存天数必须为数字！",
+        Label(modify_master,
+              text="Tips：包装规格、不含税单价、MOQ、安全库存天数必须为数字！",
               fg='red').place(x=100,y=200)
-#         Label(modify_master,text="例如：数字").place(x=10,y=90)
+        # Label(modify_master,text="例如：数字").place(x=10,y=90)
         Label(modify_master,text="修改前：").place(x=100,y=100)
         Label(modify_master,text="修改后：").place(x=100,y=150)
-#         # 一键打开预测状态
-#         def open_state():
-#             for item in modify_treeview.get_children():
-#                 modify_treeview.set(item,column='预测状态', value='MTS')
-#         Button(modify_master,text="一键打开",command=open_state).place(x=920,y=100) 
-        
-        # 将编辑好的信息更新到数据库中
+
         def db_update():
             # 获取所有最新数据,直接更新所有数据
             # 先删除，再直接附加~更简单~
@@ -215,9 +169,9 @@ class MasterData:
                 for i in ["GTS","包装规格","MOQ","安全库存天数"]:
                     df_now[i] = df_now[i].astype(float)
                 for i in range(len(df_now)):
-                    SQL_delete = "DELETE FROM ProductMaster WHERE Material ='"+                     df_now['Material'].iloc[i]+"';"
-                    Prism_db.Prism_delete(SQL_delete)
-                insert = Prism_db.Prism_insert('ProductMaster',df_now)
+                    SQL_delete = "DELETE FROM ProductMaster WHERE Material ='"+df_now['Material'].iloc[i]+"';"
+                    PrismDatabaseOperation.Prism_delete(SQL_delete)
+                insert = PrismDatabaseOperation.Prism_insert('ProductMaster',df_now)
                 if insert != "error":
                     tkinter.messagebox.showinfo("提示","成功！")
             except:
@@ -232,19 +186,12 @@ class MasterData:
         modify_master.mainloop()
 
     # 批量修改数据
-    def master_update_bacth(df):
+    def master_update_batch(df):
         # 数据修改窗口
         modify_master = Tk()
         modify_master.title('主数据修改')
         # 窗体大小随df变化而变化
         modify_master.geometry('1050x500')
-        # 提高清晰度
-#         # 告诉操作系统使用程序自身的dpi适配
-#         ctypes.windll.shcore.SetProcessDpiAwareness(1)
-#         # 获取屏幕的缩放因子
-#         ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
-#         # 设置程序缩放 75%
-#         modify_master.tk.call('tk', 'scaling', ScaleFactor/75)
         
         columns = list(df.columns)
         modify_treeview = ttk.Treeview(modify_master, height=10, show="headings", 
@@ -257,7 +204,7 @@ class MasterData:
         
         #  表示列,不显示,文本靠左，数字靠右
         for i in columns:
-    #         print(i,ProductMaster[i].dtypes)
+        # print(i,ProductMaster[i].dtypes)
             if df[i].dtypes == float or df[i].dtypes == int:
                 modify_treeview.column(i, width=97, anchor='center')
             else:
@@ -298,8 +245,11 @@ class MasterData:
 
         # 绑定函数，使表头可排序
         for col in columns:
-            modify_treeview.heading(col, text=col, command=
-                             lambda _col=col: treeview_sort_column(modify_treeview, _col, False))
+            modify_treeview.heading(col, 
+                                    text=col, 
+                                    command=lambda _col=col: treeview_sort_column(modify_treeview, 
+                                                                                  _col, 
+                                                                                  False))
         # 合并输入数据
         def set_value(event): 
             # 获取鼠标所选item
@@ -308,6 +258,7 @@ class MasterData:
 
             column = modify_treeview.identify_column(event.x)# 所在列
             cn = int(str(column).replace('#',''))
+            
             Label_select = Label(modify_master,text=str(item_text[cn-1]),width=20)
             Label_select.place(x=150, y=300)
             entryedit = Text(modify_master,width=15,height = 1)
@@ -341,14 +292,7 @@ class MasterData:
         # 显示文本数据
         Label(modify_master,text="修改前：").place(x=100,y=300)
         Label(modify_master,text="修改后：").place(x=100,y=350)
-        
-        # 一键打开预测状态
-#         def open_state():
-#             for item in modify_treeview.get_children():
-#                 modify_treeview.set(item,column='预测状态', value='MTS')
-#         Button(modify_master,text="一键打开",command=open_state).place(x=920,y=300)         
-        
-        # 将编辑好的信息更新到数据库中
+
         def db_update():
             # 获取所有最新数据,直接更新所有数据
             # 先删除，再直接附加~更简单~
@@ -357,15 +301,15 @@ class MasterData:
             a = list()
             for i in t:
                 a.append(list(modify_treeview.item(i,'values')))
-            column = list(Prism_db.Prism_select('SELECT TOP 1 * FROM ProductMaster').columns)
+            column = list(PrismDatabaseOperation.Prism_select('SELECT TOP 1 * FROM ProductMaster').columns)
             df_now = pd.DataFrame(a,columns=column)
             for i in ["GTS","包装规格","MOQ","安全库存天数"]:
                 df_now[i] = df_now[i].astype(float)
             # 删除已有material
             for i in range(len(df_now)):
                 SQL_delete = "DELETE FROM ProductMaster WHERE Material ='"+                 df_now['Material'].iloc[i]+"';"
-                Prism_db.Prism_delete(SQL_delete)
-            insert = Prism_db.Prism_insert('ProductMaster',df_now)
+                PrismDatabaseOperation.Prism_delete(SQL_delete)
+            insert = PrismDatabaseOperation.Prism_insert('ProductMaster',df_now)
             if insert != "error":
                 tkinter.messagebox.showinfo("提示","成功！")
             modify_master.destroy()
@@ -385,7 +329,7 @@ class MasterData:
 # 链接数据库 python 对sql数据库操作进行封装
 #-- coding: utf-8 --
 # Prism 数据库操作，输入sql语句，返回查询df、修改数据、删除数据等
-class Prism_db:
+class PrismDatabaseOperation:
     """
     执行Prism数据库sql语句的函数，可进行增、删、改、查
     注：增加数据时不直接通过读取excel文件输入，而是先read处理后再insert
@@ -498,7 +442,7 @@ def s_2():
 # 返回前N月的JNJ_Month
 def JNJ_Month(n):
     SQL_select_date = "SELECT JNJ_Date From Outbound"
-    Outbound_month = list(Prism_db.Prism_select(SQL_select_date)['JNJ_Date'].unique())
+    Outbound_month = list(PrismDatabaseOperation.Prism_select(SQL_select_date)['JNJ_Date'].unique())
     last_month = sorted(Outbound_month)[-n:]
     return last_month
 
@@ -529,7 +473,7 @@ def new_round(_float, _len):
 
 # 鼠标移动提醒文本
 # https://blog.csdn.net/qq_46329012/article/details/115767178
-#对该控件的定义
+# 对该控件的定义
 class ToolTip(object):
 
     def __init__(self, widget):
@@ -743,7 +687,7 @@ def master_maintain():
     lb_title.place(x=280,y=10)
     
     # 表格数据
-    ProductMaster = Prism_db.Prism_select('SELECT * FROM ProductMaster')
+    ProductMaster = PrismDatabaseOperation.Prism_select('SELECT * FROM ProductMaster')
     
     # 规范格式
     ProductMaster.fillna("-",inplace=True)
@@ -879,7 +823,7 @@ def master_maintain():
     def add_material():
         to_updata = pd.DataFrame(data=[],columns=columns)
         to_updata.loc[0] = ["规格型号","数字","","","","","数字","MTS","数字","数字"]
-        MasterData.master_update_bacth(to_updata)
+        MasterData.master_update_batch(to_updata)
     
     btn_add_material = Button(frame,text="单个添加",font=("heiti",10,'bold'),bg='slategrey',
                               fg='white',width=9,height=1,borderwidth=5,
@@ -891,7 +835,7 @@ def master_maintain():
         filename = tkinter.filedialog.askopenfilename().replace("/","\\")
         batch_code = pd.read_excel(filename,dtype={"包装规格":float,"不含税单价":float})
         # 批量插入数据，如已存在，则直接覆盖已有数据
-        MasterData.master_update_bacth(batch_code)
+        MasterData.master_update_batch(batch_code)
         
     btn_batch_material = Button(frame,text="批量上传",font=("heiti",10,'bold'),bg='slategrey',
                                 fg='white',width=9,height=1,borderwidth=5,
@@ -1035,22 +979,22 @@ def read_dir():
                 Intransit.rename(columns={'规格型号':'Material','数量':'Intransit_QTY'},inplace=True)
                 # 使用prism类，导入df数据，导入之前判断数据库的强生年月（文件名中含有）中是否
                 # 已经存在，若有，则跳过导入数据；若无，则直接添加；数据库为空则直接添加
-                JNJ_Date_exist = Prism_db.Prism_select('SELECT JNJ_Date FROM Intransit')
+                JNJ_Date_exist = PrismDatabaseOperation.Prism_select('SELECT JNJ_Date FROM Intransit')
                 Intransit = Intransit[['Material','Intransit_QTY','JNJ_Date']]
                 if pd.isnull(Intransit.at[0,'Material'])==False:
                     Intransit.drop(Intransit[Intransit["Material"].isnull()].index,inplace=True)
                     Intransit.fillna(0,inplace=True)
                     if JNJ_Date_exist.empty:
-                        insert_Intransit = Prism_db.Prism_insert('Intransit',Intransit)
+                        insert_Intransit = PrismDatabaseOperation.Prism_insert('Intransit',Intransit)
                         if insert_Intransit == "error":
                             error_input.append(name)
                     else:
                         if jnj_date in JNJ_Date_exist['JNJ_Date'].unique():
                             already_input.append(name)
                             SQL_select = "SELECT * FROM Intransit WHERE JNJ_Date = '"+jnj_date+"'"
-                            Intransit = Prism_db.Prism_select(SQL_select)
+                            Intransit = PrismDatabaseOperation.Prism_select(SQL_select)
                         else:
-                            insert_Intransit = Prism_db.Prism_insert('Intransit',Intransit)
+                            insert_Intransit = PrismDatabaseOperation.Prism_insert('Intransit',Intransit)
                             if insert_Intransit == "error":
                                 error_input.append(name)
                 else:
@@ -1067,22 +1011,22 @@ def read_dir():
                 Onhand['JNJ_Date'] = jnj_date
                 # 数据库中列名小括号引发列名不一致问题
                 Onhand.rename(columns={'规格型号':'Material','数量':'Onhand_QTY'},inplace=True)
-                JNJ_Date_exist = Prism_db.Prism_select('SELECT JNJ_Date FROM Onhand')
+                JNJ_Date_exist = PrismDatabaseOperation.Prism_select('SELECT JNJ_Date FROM Onhand')
                 Onhand = Onhand[['Material','Onhand_QTY','JNJ_Date']]
                 if pd.isnull(Onhand.at[0,'Material'])==False:
                     Onhand.drop(Onhand[Onhand["Material"].isnull()].index,inplace=True)
                     Onhand.fillna(0,inplace=True)
                     if JNJ_Date_exist.empty:
-                        insert_Onhand = Prism_db.Prism_insert('Onhand',Onhand)
+                        insert_Onhand = PrismDatabaseOperation.Prism_insert('Onhand',Onhand)
                         if insert_Onhand == "error":
                             error_input.append(name)
                     else:
                         if jnj_date in JNJ_Date_exist['JNJ_Date'].unique():
                             already_input.append(name)
                             SQL_select = "SELECT * FROM Onhand WHERE JNJ_Date = '"+jnj_date+"'"
-                            Onhand = Prism_db.Prism_select(SQL_select)
+                            Onhand = PrismDatabaseOperation.Prism_select(SQL_select)
                         else:
-                            insert_Onhand = Prism_db.Prism_insert('Onhand',Onhand)
+                            insert_Onhand = PrismDatabaseOperation.Prism_insert('Onhand',Onhand)
                             if insert_Onhand == "error":
                                 error_input.append(name)
                 else:
@@ -1098,7 +1042,7 @@ def read_dir():
                 Putaway = pd.read_excel(file_path,dtype={'规格型号':str})
                 Putaway['JNJ_Date'] = jnj_date
                 Putaway.rename(columns={'规格型号':'Material','数量':'Putaway_QTY'},inplace=True)
-                JNJ_Date_exist = Prism_db.Prism_select('SELECT JNJ_Date FROM Putaway')
+                JNJ_Date_exist = PrismDatabaseOperation.Prism_select('SELECT JNJ_Date FROM Putaway')
                 Putaway = Putaway[['Material','Putaway_QTY','JNJ_Date']]
                 # 数据源不会空
                 if pd.isnull(Putaway.at[0,'Material'])==False:
@@ -1106,16 +1050,16 @@ def read_dir():
                     Putaway.drop(Putaway[Putaway["Material"].isnull()].index,inplace=True)
                     Putaway.fillna(0,inplace=True)
                     if JNJ_Date_exist.empty:
-                        insert_Putaway = Prism_db.Prism_insert('Putaway',Putaway)
+                        insert_Putaway = PrismDatabaseOperation.Prism_insert('Putaway',Putaway)
                         if insert_Putaway == "error":
                             error_input.append(name)
                     else:
                         if jnj_date in JNJ_Date_exist['JNJ_Date'].unique():
                             already_input.append(name)
                             SQL_select = "SELECT * FROM Putaway WHERE JNJ_Date = '"+jnj_date+"'"
-                            Putaway = Prism_db.Prism_select(SQL_select)
+                            Putaway = PrismDatabaseOperation.Prism_select(SQL_select)
                         else:
-                            insert_Putaway = Prism_db.Prism_insert('Putaway',Putaway)
+                            insert_Putaway = PrismDatabaseOperation.Prism_insert('Putaway',Putaway)
                             if insert_Putaway == "error":
                                 error_input.append(name)
                 else:
@@ -1135,21 +1079,21 @@ def read_dir():
                 Outbound = Outbound[['Material','Outbound_QTY','JNJ_Date']]
                 Outbound = Outbound.groupby(by=['JNJ_Date','Material'],
                                               as_index=False).sum()
-                JNJ_Date_exist = Prism_db.Prism_select('SELECT JNJ_Date FROM Outbound')
+                JNJ_Date_exist = PrismDatabaseOperation.Prism_select('SELECT JNJ_Date FROM Outbound')
                 if pd.isnull(Outbound.at[0,'Material'])==False:
                     Outbound.drop(Outbound[Outbound["Material"].isnull()].index,inplace=True)
                     Outbound.fillna(0,inplace=True)
                     if JNJ_Date_exist.empty:
-                        insert_Outbound = Prism_db.Prism_insert('Outbound',Outbound)
+                        insert_Outbound = PrismDatabaseOperation.Prism_insert('Outbound',Outbound)
                         if insert_Outbound == "error":
                             error_input.append(name)
                     else:
                         if jnj_date in JNJ_Date_exist['JNJ_Date'].unique():
                             already_input.append(name)
                             SQL_select = "SELECT * FROM Outbound WHERE JNJ_Date = '"+jnj_date+"'"
-                            Outbound = Prism_db.Prism_select(SQL_select)
+                            Outbound = PrismDatabaseOperation.Prism_select(SQL_select)
                         else:
-                            insert_Outbound = Prism_db.Prism_insert('Outbound',Outbound)
+                            insert_Outbound = PrismDatabaseOperation.Prism_insert('Outbound',Outbound)
                             if insert_Outbound == "error":
                                 error_input.append(name)
                 else:
@@ -1165,22 +1109,22 @@ def read_dir():
                 Backorder = pd.read_excel(file_path)
                 Backorder['JNJ_Date'] = jnj_date
                 Backorder.rename(columns={'规格型号':'Material','数量':'Backorder_QTY'},inplace=True)
-                JNJ_Date_exist = Prism_db.Prism_select('SELECT JNJ_Date FROM Backorder')
+                JNJ_Date_exist = PrismDatabaseOperation.Prism_select('SELECT JNJ_Date FROM Backorder')
                 Backorder = Backorder[['Material','Backorder_QTY','JNJ_Date']]
                 if pd.isnull(Backorder.at[0,'Material'])==False:
                     Backorder.drop(Backorder[Backorder["Material"].isnull()].index,inplace=True)
                     Backorder.fillna(0,inplace=True)
                     if JNJ_Date_exist.empty:
-                        insert_Backorder = Prism_db.Prism_insert('Backorder',Backorder)
+                        insert_Backorder = PrismDatabaseOperation.Prism_insert('Backorder',Backorder)
                         if insert_Backorder == "error":
                             error_input.append(name)
                     else:
                         if jnj_date in JNJ_Date_exist['JNJ_Date'].unique():
                             already_input.append(name)
                             SQL_select = "SELECT * FROM Backorder WHERE JNJ_Date = '"+jnj_date+"';"
-                            Backorder = Prism_db.Prism_select(SQL_select)
+                            Backorder = PrismDatabaseOperation.Prism_select(SQL_select)
                         else:
-                            insert_Backorder = Prism_db.Prism_insert('Backorder',Backorder)
+                            insert_Backorder = PrismDatabaseOperation.Prism_insert('Backorder',Backorder)
                             if insert_Backorder == "error":
                                 error_input.append(name)
                 else:
@@ -1241,7 +1185,7 @@ def read_dir():
     
 #     merge_all.to_excel(r"merge_all.xlsx",index=False)
     # 获取当前Product Master
-    ProductMaster = Prism_db.Prism_select('SELECT * FROM ProductMaster')
+    ProductMaster = PrismDatabaseOperation.Prism_select('SELECT * FROM ProductMaster')
     # 合并
     merge_lack = pd.merge(ProductMaster,merge_all, on='Material',how='outer')
 #     merge_lack.to_excel(r"merge_lack.xlsx",index=False)
@@ -1257,7 +1201,7 @@ def read_dir():
 
     # 检测是code是否缺失和预测状态是否打开
     if to_updata.empty == False:
-        MasterData.master_update_bacth(to_updata)
+        MasterData.master_update_batch(to_updata)
 
 
 # 需求数据预测
@@ -1272,11 +1216,11 @@ def forecast():
     def acl_FCSTModel():
         # 读取当月缺货、销售出库、季节因子数据，并且进行合并和计算，并导入相应的数据库表
         last_month = JNJ_Month(1)[0]
-        Outbound = Prism_db.Prism_select("SELECT * FROM Outbound WHERE JNJ_Date='"+last_month+"';")
-        Backorder = Prism_db.Prism_select("SELECT * FROM Backorder WHERE JNJ_Date='"+
+        Outbound = PrismDatabaseOperation.Prism_select("SELECT * FROM Outbound WHERE JNJ_Date='"+last_month+"';")
+        Backorder = PrismDatabaseOperation.Prism_select("SELECT * FROM Backorder WHERE JNJ_Date='"+
                                           last_month+"';")
         B_O = pd.merge(Outbound,Backorder,how="outer",on=['Material','JNJ_Date'])
-        SeasonFactor = Prism_db.Prism_select("SELECT * FROM SeasonFactor;")
+        SeasonFactor = PrismDatabaseOperation.Prism_select("SELECT * FROM SeasonFactor;")
         ActDemand = pd.merge(B_O,SeasonFactor,how="left",on=['JNJ_Date'])
         ActDemand['Backorder_QTY'].fillna(0,inplace=True)
         ActDemand['Outbound_QTY'].fillna(0,inplace=True)
@@ -1284,12 +1228,12 @@ def forecast():
                                       ActDemand['Backorder_QTY'])/ActDemand['season_factor']
         ActDemand = ActDemand[['JNJ_Date','Material','ActDemand_QTY']]
         # 插入之前判断是否已有数据
-        ActDemand_db = Prism_db.Prism_select("SELECT * FROM ActDemand WHERE JNJ_Date='"+
+        ActDemand_db = PrismDatabaseOperation.Prism_select("SELECT * FROM ActDemand WHERE JNJ_Date='"+
                                              last_month+"';")
         #         ActDemand.to_excel(r"ActDemand.xlsx")
         missing = []
         if ActDemand_db.empty:
-            Prism_db.Prism_insert('ActDemand',ActDemand)
+            PrismDatabaseOperation.Prism_insert('ActDemand',ActDemand)
         else:
             ActDemand = ActDemand_db
             missing.append("模型数据")
@@ -1299,11 +1243,11 @@ def forecast():
         FCSTmodel = pd.DataFrame()
         for i in range(12):
             SQL_select = "SELECT * FROM ActDemand WHERE JNJ_Date='"+month_12[i]+"';"
-            FCSTmodel = FCSTmodel.append(Prism_db.Prism_select(SQL_select))
+            FCSTmodel = FCSTmodel.append(PrismDatabaseOperation.Prism_select(SQL_select))
 
         # 获取所有FCST_state为开的ProductMaster数据
         SQL_state = "SELECT Material,分类Level4 FROM ProductMaster WHERE FCST_state = 'MTS'"
-        state_MTS  = Prism_db.Prism_select(SQL_state)
+        state_MTS  = PrismDatabaseOperation.Prism_select(SQL_state)
 
         # 链接数据，得到所需的计算12个月的数据
         acl_FCSTDemand = pd.merge(state_MTS,FCSTmodel,how="outer",on=['Material'])
@@ -1311,7 +1255,7 @@ def forecast():
         #         print(acl_FCSTDemand)
 
         # 获取权值
-        FCSTWeight = Prism_db.Prism_select("SELECT * FROM FCSTWeight")
+        FCSTWeight = PrismDatabaseOperation.Prism_select("SELECT * FROM FCSTWeight")
         w1 = FCSTWeight['值'].iloc[0]
         w2 = FCSTWeight['值'].iloc[1]
         w3 = FCSTWeight['值'].iloc[2]
@@ -1370,7 +1314,7 @@ def forecast():
 
         # 前面除过的季节因子，现在乘回来，需获取当月的JNJ_Date并获取后三个月的季节因子
         try:
-            SeasonFactor = Prism_db.Prism_select("SELECT * FROM SeasonFactor")
+            SeasonFactor = PrismDatabaseOperation.Prism_select("SELECT * FROM SeasonFactor")
             months_1 = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                         relativedelta(months=1)).strftime("%Y%m")
             months_2 = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
@@ -1401,12 +1345,12 @@ def forecast():
 
         # 判断数据库中是否已存在，将计算出来的数值插入到数据库中
         SQL_select = "SELECT JNJ_Date FROM FCSTDemand"
-        FCST_Demand_Date = Prism_db.Prism_select(SQL_select)['JNJ_Date']
+        FCST_Demand_Date = PrismDatabaseOperation.Prism_select(SQL_select)['JNJ_Date']
         if JNJ_Month(1) not in FCST_Demand_Date.unique() or FCST_Demand_Date.empty:
-            Prism_db.Prism_insert('FCSTDemand',FCSTDemand)
+            PrismDatabaseOperation.Prism_insert('FCSTDemand',FCSTDemand)
         else:
             SQL = "SELECT * FROM FCSTDemand WHERE JNJ_Date ='"+JNJ_Month(1)[0]+"';"
-            FCSTDemand = Prism_db.Prism_select(SQL)
+            FCSTDemand = PrismDatabaseOperation.Prism_select(SQL)
             missing.append("预测数据")
         #             tkinter.messagebox.showinfo("提示",JNJ_Month(1)[0]+"预测数据已存在！")
 
@@ -1414,12 +1358,12 @@ def forecast():
         AdjustFCSTDemand = FCSTDemand[['JNJ_Date','Material','FCST_Demand1']]
         AdjustFCSTDemand["Remark"] = ""
         SQL_select = "SELECT JNJ_Date FROM AdjustFCSTDemand"
-        Adjust_FCST_Demand_Date = Prism_db.Prism_select(SQL_select)['JNJ_Date']
+        Adjust_FCST_Demand_Date = PrismDatabaseOperation.Prism_select(SQL_select)['JNJ_Date']
         if JNJ_Month(1)  not in Adjust_FCST_Demand_Date.unique() or Adjust_FCST_Demand_Date.empty:
-            Prism_db.Prism_insert('AdjustFCSTDemand',AdjustFCSTDemand)
+            PrismDatabaseOperation.Prism_insert('AdjustFCSTDemand',AdjustFCSTDemand)
         else:
             SQL = "SELECT * FROM AdjustFCSTDemand WHERE JNJ_Date ='"+JNJ_Month(1)[0]+"';"
-            AdjustFCSTDemand = Prism_db.Prism_select(SQL)
+            AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL)
             missing.append("已调整预测需求")
         #             tkinter.messagebox.showinfo("提示",JNJ_Month(1)[0]+"已调整预测需求已存在")        
 
@@ -1429,13 +1373,13 @@ def forecast():
 
         # 将预测结果显示到主窗口，规格型号、产品家族、出库记录（6个月）、置信度（6个月数据，千分位）
         SQL_select = "SELECT [Material],[分类Level4] FROM ProductMaster WHERE FCST_state = 'MTS'"
-        ProductMaster = Prism_db.Prism_select(SQL_select)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_select)
 
         # 获取出库记录（6个月）
         Outbound_QTY = pd.DataFrame()
         for i in range(6):
             SQL_select_outbound = "SELECT * FROM Outbound WHERE JNJ_Date = '"+             JNJ_Month(6)[i]+"';"
-            Outbound_QTY = Outbound_QTY.append(Prism_db.Prism_select(SQL_select_outbound))
+            Outbound_QTY = Outbound_QTY.append(PrismDatabaseOperation.Prism_select(SQL_select_outbound))
         Outbound_QTY = Outbound_QTY.pivot_table(index='Material',columns="JNJ_Date")
         Outbound_QTY_col = [] # 换列名，方便直接取出相应月份的数据
         for i in range(6):
@@ -1611,13 +1555,13 @@ def forecast():
                     item_text = treeview.item(treeview.selection(), "values")
 #                     print(item_text,FCST.columns)
                     SQL_update_1 = "UPDATE AdjustFCSTDemand SET FCST_Demand1 = "+                     str(Entry_item_num)+" WHERE Material ='"+str(item_text[0])+                     "' AND JNJ_date = '"+str(FCST.columns[6])+"';" 
-                    Prism_db.Prism_update(SQL_update_1)
+                    PrismDatabaseOperation.Prism_update(SQL_update_1)
                     # 将编辑好的数字信息更新到界面上
                     treeview.set(treeview.selection(), column=str(FCST.columns[3]),
                                  value=Entry_item.get())
                     # 将编辑好的备注信息更新到数据库中
                     SQL_update_2 =  "UPDATE AdjustFCSTDemand SET Remark = '"+                     Entry_remark.get()+"' WHERE Material ='"+str(item_text[0])+                     "' AND JNJ_date = '"+str(FCST.columns[6])+"';"
-                    Prism_db.Prism_update(SQL_update_2)
+                    PrismDatabaseOperation.Prism_update(SQL_update_2)
                     # 将编辑好的字符信息更新到界面上
                     treeview.set(treeview.selection(),column=str(FCST.columns[4]),
                                  value=Entry_remark.get())
@@ -1807,28 +1751,28 @@ def MapeBias():
     # 出库数据
     last_month = JNJ_Month(1)[0]
     SQL_Outbound = "SELECT * FROM Outbound WHERE JNJ_Date='"+last_month+"';"
-    Outbound = Prism_db.Prism_select(SQL_Outbound)
+    Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
     Outbound = Outbound[["Material","Outbound_QTY"]]
     if Outbound.empty:
         lack.append("出库")
 
     # 调整后的需求数据
     SQL_AdjustFCSTDemand = "SELECT * FROM AdjustFCSTDemand WHERE JNJ_Date='"+JNJ_Month(2)[0]+"';"
-    AdjustFCSTDemand = Prism_db.Prism_select(SQL_AdjustFCSTDemand)
+    AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_AdjustFCSTDemand)
     AdjustFCSTDemand = AdjustFCSTDemand[["Material","FCST_Demand1","Remark"]]
     if AdjustFCSTDemand.empty:
         lack.append("调整后的需求数据")
 
     # 缺货数据
     SQL_Backorder = "SELECT * FROM Backorder WHERE JNJ_Date='"+last_month+"';"
-    Backorder = Prism_db.Prism_select(SQL_Backorder)
+    Backorder = PrismDatabaseOperation.Prism_select(SQL_Backorder)
     Backorder = Backorder[["Material","Backorder_QTY"]]
     if Backorder.empty:
         lack.append("缺货")
 
     # 主数据
     SQL_ProductMaster = "SELECT Material,ABC,FCST_state From ProductMaster;"
-    ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+    ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
 
     # 合并
     merge_1 = pd.merge(AdjustFCSTDemand,Outbound,on="Material",how="outer")
@@ -2100,17 +2044,17 @@ def MapeBias():
 
         # 主数据
         SQL_ProductMaster = "SELECT Material,ABC,FCST_state From ProductMaster;"
-        ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
 
         # 出库数据
         SQL_Outbound = "SELECT * FROM Outbound WHERE JNJ_Date in "+JNJ_12Month+";"
-        Outbound = Prism_db.Prism_select(SQL_Outbound)
+        Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
         if Outbound.empty:
             lack.append("出库")
 
         # 缺货数据
         SQL_Backorder = "SELECT * FROM Backorder WHERE JNJ_Date in "+JNJ_12Month+";"
-        Backorder = Prism_db.Prism_select(SQL_Backorder)
+        Backorder = PrismDatabaseOperation.Prism_select(SQL_Backorder)
         if Backorder.empty:
             lack.append("缺货")
 
@@ -2120,7 +2064,7 @@ def MapeBias():
             JNJ_13Month.append(JNJ_Month(13)[i])
         JNJ_13Month = str(tuple(JNJ_13Month))
         SQL_AdjustFCSTDemand = "SELECT * FROM AdjustFCSTDemand WHERE JNJ_Date in "+JNJ_13Month+";"
-        AdjustFCSTDemand = Prism_db.Prism_select(SQL_AdjustFCSTDemand)
+        AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_AdjustFCSTDemand)
         # 为使相应数据合并，所有月份加1
         for i in range(len(AdjustFCSTDemand)):
             AdjustFCSTDemand.loc[i,"JNJ_Date"] = (datetime.datetime.strptime(
@@ -2470,12 +2414,12 @@ def Replenishment():
         lack = []
         # 主数据
         SQL_ProductMaster = "SELECT Material,GTS,ABC,MOQ From ProductMaster " +         "WHERE FCST_state='MTS';"
-        ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
         ProductMaster.rename(columns={'ABC':"Class"},inplace=True)
         
         # 出库数据6个月，计算置信度
         SQL_Outbound = "SELECT * From Outbound WHERE JNJ_Date = '"+JNJ_Month(6)[0]+         "' OR JNJ_Date = '"+JNJ_Month(6)[1]+"' OR JNJ_Date = '"+JNJ_Month(6)[2]+         "' OR JNJ_Date = '"+JNJ_Month(6)[3]+"' OR JNJ_Date = '"+JNJ_Month(6)[4]         +"' OR JNJ_Date = '"+JNJ_Month(6)[5]+"';"
-        Outbound = Prism_db.Prism_select(SQL_Outbound)
+        Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
         Outbound = Outbound.pivot_table(index='Material',columns='JNJ_Date')
         Outbound_QTY_col = [] # 换列名，方便直接取出相应月份的数据
         for i in range(6):
@@ -2487,38 +2431,38 @@ def Replenishment():
         
         # Intransit
         SQL_Intransit = "SELECT Material,Intransit_QTY From Intransit WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Intransit = Prism_db.Prism_select(SQL_Intransit)
+        Intransit = PrismDatabaseOperation.Prism_select(SQL_Intransit)
         if Intransit.empty:
             lack.append("在途")
             
         # Onhand_QTY
         SQL_Onhand = "SELECT Material,Onhand_QTY From Onhand WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Onhand = Prism_db.Prism_select(SQL_Onhand)
+        Onhand = PrismDatabaseOperation.Prism_select(SQL_Onhand)
         if Onhand.empty:
             lack.append("可发")
     
         # Putaway
         SQL_Putaway = "SELECT Material,Putaway_QTY From Putaway WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Putaway = Prism_db.Prism_select(SQL_Putaway)
+        Putaway = PrismDatabaseOperation.Prism_select(SQL_Putaway)
         if Putaway.empty:
             lack.append("预入库")
         
         # Backorder
         SQL_Backorder = "SELECT Material,Backorder_QTY From Backorder WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Backorder = Prism_db.Prism_select(SQL_Backorder)
+        Backorder = PrismDatabaseOperation.Prism_select(SQL_Backorder)
         if Backorder.empty:
             lack.append("缺货")
         
         # AdjustFCSTDemand
         SQL_Adjust = "SELECT Material,FCST_Demand1,Remark From AdjustFCSTDemand WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        AdjustFCSTDemand = Prism_db.Prism_select(SQL_Adjust)
+        AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_Adjust)
         AdjustFCSTDemand['FCST_Demand1'] = new_round(AdjustFCSTDemand['FCST_Demand1'],0)
         if AdjustFCSTDemand.empty:
             lack.append("需求")
         
         # SafetyStockDay安全库存天数
         SQL_SafetyStockDay = "SELECT [Class],[Safetystock_Day] From SafetyStockDay;"
-        SafetyStockDay = Prism_db.Prism_select(SQL_SafetyStockDay)
+        SafetyStockDay = PrismDatabaseOperation.Prism_select(SQL_SafetyStockDay)
         if SafetyStockDay.empty:
             lack.append("安全库存天数")
         
@@ -2602,7 +2546,7 @@ def Replenishment():
     def acl_rep():
         merge_all = read_db()
         # 获取补货权值
-        WeeklyPattern = Prism_db.Prism_select("SELECT * FROM WeeklyPattern")
+        WeeklyPattern = PrismDatabaseOperation.Prism_select("SELECT * FROM WeeklyPattern")
         WK1 = WeeklyPattern[WeeklyPattern['week']=='WK1']['pattern'].iloc[0]
         WK2 = WeeklyPattern[WeeklyPattern['week']=='WK2']['pattern'].iloc[0]
         WK3 = WeeklyPattern[WeeklyPattern['week']=='WK3']['pattern'].iloc[0]
@@ -2671,9 +2615,9 @@ def Replenishment():
         # 显示计算金额并进行比较，若有上个月数据，则显示，若无则显示为0
         next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                   relativedelta(months=1)).strftime("%Y%m") # 下个月时间 
-        if next_month in list(Prism_db.Prism_select("SELECT JNJ_Date FROM OrderTarget")['JNJ_Date']):
+        if next_month in list(PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM OrderTarget")['JNJ_Date']):
             SQL_select_target = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-            Target_amount = Prism_db.Prism_select(SQL_select_target)['order_target'].iloc[0]
+            Target_amount = PrismDatabaseOperation.Prism_select(SQL_select_target)['order_target'].iloc[0]
             lb_target_amount = Label(frame,text=re_round(Target_amount),anchor="e",
                                      font=('黑体',15),width=15,height=2,bg='WhiteSmoke')
             lb_target_amount.place(x=820,y=3)
@@ -2818,19 +2762,19 @@ def Replenishment():
     #         print(Rep_plan)
             # 判断当前数据库中的月份
         
-            if next_month in list(Prism_db.Prism_select("SELECT JNJ_Date FROM RepPlan")['JNJ_Date']):
+            if next_month in list(PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM RepPlan")['JNJ_Date']):
                 SQL_delete = "DELETE FROM RepPlan WHERE JNJ_Date = '"+next_month+"';"
-                Prism_db.Prism_delete(SQL_delete)
-                Prism_db.Prism_insert('RepPlan',Rep_plan)
+                PrismDatabaseOperation.Prism_delete(SQL_delete)
+                PrismDatabaseOperation.Prism_insert('RepPlan',Rep_plan)
                 # 将微调后的保存至数据库的调整计划表
                 SQL_delete_Adjust = "DELETE FROM AdjustRepPlan WHERE JNJ_Date = '"+next_month+"';"
-                Prism_db.Prism_delete(SQL_delete_Adjust)
+                PrismDatabaseOperation.Prism_delete(SQL_delete_Adjust)
                 Adj_Rep_plan = Rep_plan.copy()
                 Adj_Rep_plan["Rep_Remark"] = ""
-                Prism_db.Prism_insert('AdjustRepPlan',Rep_plan)
+                PrismDatabaseOperation.Prism_insert('AdjustRepPlan',Rep_plan)
             else:
-                Prism_db.Prism_insert('AdjustRepPlan',Rep_plan)
-                Prism_db.Prism_insert('RepPlan',Rep_plan)
+                PrismDatabaseOperation.Prism_insert('AdjustRepPlan',Rep_plan)
+                PrismDatabaseOperation.Prism_insert('RepPlan',Rep_plan)
                 
             tkinter.messagebox.showinfo("提示","保存成功！")
         
@@ -2903,7 +2847,7 @@ def Replenishment():
             entry_input.place(x=820,y=10)
             # 插入数据库中的目标金额
             SQL_OrderTarget = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-            OrderTarget_amount = Prism_db.Prism_select(SQL_OrderTarget)
+            OrderTarget_amount = PrismDatabaseOperation.Prism_select(SQL_OrderTarget)
             entry_input.insert(0,OrderTarget_amount["order_target"].iloc[0])
             
             # 确认输入函数，并将输入数据更新至数据库
@@ -2911,21 +2855,21 @@ def Replenishment():
                 # 保存数据库并以最后的标准为主，方法：先插入下个月信息，再更新输入信息
                 # 如果已存在于数据库，则直接更新，否则新增空的过度变量再更新
                 if next_month in list(
-                    Prism_db.Prism_select("SELECT JNJ_Date FROM OrderTarget")["JNJ_Date"]):
+                    PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM OrderTarget")["JNJ_Date"]):
                     # 覆盖输入数据
                     SQL_delete = "DELETE FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-                    Prism_db.Prism_delete(SQL_delete)
+                    PrismDatabaseOperation.Prism_delete(SQL_delete)
                     OrderTarget = pd.DataFrame(data={'JNJ_Date':[next_month],
                                                      'order_target':[float(entry_input.get())]})
-                    Prism_db.Prism_insert('OrderTarget',OrderTarget)
+                    PrismDatabaseOperation.Prism_insert('OrderTarget',OrderTarget)
                 else:
                     OrderTarget = pd.DataFrame(data={'JNJ_Date':[next_month],
                                                      'order_target':[float(entry_input.get())]})
-                    Prism_db.Prism_insert('OrderTarget',OrderTarget)
+                    PrismDatabaseOperation.Prism_insert('OrderTarget',OrderTarget)
 
 
                 SQL_select_target = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-                Target_amount = Prism_db.Prism_select(SQL_select_target)['order_target'].iloc[0]
+                Target_amount = PrismDatabaseOperation.Prism_select(SQL_select_target)['order_target'].iloc[0]
                 lb_target_amount = Label(frame,text=re_round(Target_amount),anchor="e",
                                          font=('黑体',15),width=15,height=2,bg='WhiteSmoke')
                 lb_target_amount.place(x=820,y=3)
@@ -2970,7 +2914,7 @@ def Replenishment():
     def modify_safeday():
         # 获取安全库存天数信息
         SQL_SafetyStockDay = "SELECT [Class],[Safetystock_Day] From SafetyStockDay;"
-        SafetyStockDay = Prism_db.Prism_select(SQL_SafetyStockDay)
+        SafetyStockDay = PrismDatabaseOperation.Prism_select(SQL_SafetyStockDay)
         # 修改安全库存天数界面
         modify_SafetyStockDay = Tk()
         modify_SafetyStockDay.title('安全库存天数修改')
@@ -3038,14 +2982,14 @@ def Replenishment():
             # 先删除，再直接插入~更简单~
             item_text = modify_treeview.item(modify_treeview.selection(), "values")
             SQL_delete = "DELETE FROM SafetyStockDay ;"
-            Prism_db.Prism_delete(SQL_delete)
+            PrismDatabaseOperation.Prism_delete(SQL_delete)
             # 遍历获取所有数据，并生成df
             t = modify_treeview.get_children()
             a = list()
             for i in t:
                 a.append(list(modify_treeview.item(i,'values')))
             df_now = pd.DataFrame(a,columns=columns)
-            Prism_db.Prism_insert('SafetyStockDay',df_now)
+            PrismDatabaseOperation.Prism_insert('SafetyStockDay',df_now)
 #             modify_SafetyStockDay.destroy()
             # 再次计算,更新金额,覆盖界面
             acl_rep()
@@ -3066,10 +3010,10 @@ def Replenishment():
     def modify_WeeklyPattern():
         # 获取安全库存天数信息
         SQL_SafetyStockDay = "SELECT [Class],[Safetystock_Day] From SafetyStockDay;"
-        SafetyStockDay = Prism_db.Prism_select(SQL_SafetyStockDay)
+        SafetyStockDay = PrismDatabaseOperation.Prism_select(SQL_SafetyStockDay)
         
         # 获取数据库中的补货权值
-        WeeklyPattern = Prism_db.Prism_select("SELECT * FROM WeeklyPattern")
+        WeeklyPattern = PrismDatabaseOperation.Prism_select("SELECT * FROM WeeklyPattern")
         
         # 修改窗体
         modify_WeeklyPattern = Tk()
@@ -3139,14 +3083,14 @@ def Replenishment():
             # 先删除，再直接插入~更简单~
             item_text = modify_treeview.item(modify_treeview.selection(), "values")
             SQL_delete = "DELETE FROM WeeklyPattern ;"
-            Prism_db.Prism_delete(SQL_delete)
+            PrismDatabaseOperation.Prism_delete(SQL_delete)
             # 遍历获取所有数据，并生成df
             t = modify_treeview.get_children()
             a = list()
             for i in t:
                 a.append(list(modify_treeview.item(i,'values')))
             df_now = pd.DataFrame(a,columns=columns)
-            Prism_db.Prism_insert('WeeklyPattern',df_now)
+            PrismDatabaseOperation.Prism_insert('WeeklyPattern',df_now)
             # 再次计算,更新金额,覆盖界面
             acl_rep()
         
@@ -3180,11 +3124,11 @@ def modify_Replenishment():
         lack = []
         # 主数据
         SQL_ProductMaster = "SELECT Material,GTS,ABC,MOQ From ProductMaster " +         "WHERE FCST_state='MTS';"
-        ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
         ProductMaster.rename(columns={'ABC':"Class"},inplace=True)
         # 出库数据6个月，计算置信度
         SQL_Outbound = "SELECT * From Outbound WHERE JNJ_Date = '"+JNJ_Month(6)[0]+         "' OR JNJ_Date = '"+JNJ_Month(6)[1]+"' OR JNJ_Date = '"+JNJ_Month(6)[2]+         "' OR JNJ_Date = '"+JNJ_Month(6)[3]+"' OR JNJ_Date = '"+JNJ_Month(6)[4]         +"' OR JNJ_Date = '"+JNJ_Month(6)[5]+"';"
-        Outbound = Prism_db.Prism_select(SQL_Outbound)
+        Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
         Outbound = Outbound.pivot_table(index='Material',columns='JNJ_Date')
         Outbound_QTY_col = [] # 换列名，方便直接取出相应月份的数据
         for i in range(6):
@@ -3196,38 +3140,38 @@ def modify_Replenishment():
 
         # Intransit
         SQL_Intransit = "SELECT Material,Intransit_QTY From Intransit WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Intransit = Prism_db.Prism_select(SQL_Intransit)
+        Intransit = PrismDatabaseOperation.Prism_select(SQL_Intransit)
         if Intransit.empty:
             lack.append("在途")
 
         # Onhand_QTY
         SQL_Onhand = "SELECT Material,Onhand_QTY From Onhand WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Onhand = Prism_db.Prism_select(SQL_Onhand)
+        Onhand = PrismDatabaseOperation.Prism_select(SQL_Onhand)
         if Onhand.empty:
             lack.append("可发")
 
         # Putaway
         SQL_Putaway = "SELECT Material,Putaway_QTY From Putaway WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Putaway = Prism_db.Prism_select(SQL_Putaway)
+        Putaway = PrismDatabaseOperation.Prism_select(SQL_Putaway)
         if Putaway.empty:
             lack.append("预入库")
 
         # Backorder
         SQL_Backorder = "SELECT Material,Backorder_QTY From Backorder WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        Backorder = Prism_db.Prism_select(SQL_Backorder)
+        Backorder = PrismDatabaseOperation.Prism_select(SQL_Backorder)
         if Backorder.empty:
             lack.append("缺货")
 
         # AdjustFCSTDemand
         SQL_Adjust = "SELECT Material,FCST_Demand1,Remark From AdjustFCSTDemand WHERE JNJ_Date = '"+         JNJ_Month(3)[2]+"';"
-        AdjustFCSTDemand = Prism_db.Prism_select(SQL_Adjust)
+        AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_Adjust)
         AdjustFCSTDemand['FCST_Demand1'] = new_round(AdjustFCSTDemand['FCST_Demand1'],0)
         if AdjustFCSTDemand.empty:
             lack.append("需求")
 
         # SafetyStockDay安全库存天数
         SQL_SafetyStockDay = "SELECT [Class],[Safetystock_Day] From SafetyStockDay;"
-        SafetyStockDay = Prism_db.Prism_select(SQL_SafetyStockDay)
+        SafetyStockDay = PrismDatabaseOperation.Prism_select(SQL_SafetyStockDay)
         if SafetyStockDay.empty:
             lack.append("安全库存天数")
 
@@ -3235,7 +3179,7 @@ def modify_Replenishment():
         next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                   relativedelta(months=1)).strftime("%Y%m") # 下个月时间 
         SQL_AdjustRepPlan = "SELECT * From AdjustRepPlan WHERE JNJ_Date= "+next_month+";"
-        AdjustRepPlan = Prism_db.Prism_select(SQL_AdjustRepPlan)
+        AdjustRepPlan = PrismDatabaseOperation.Prism_select(SQL_AdjustRepPlan)
         if AdjustRepPlan.empty:
             lack.append("补货计划")
         # Rep_Remark存储在W1中
@@ -3330,9 +3274,9 @@ def modify_Replenishment():
         # **************** 主界面 ***************#
         next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                   relativedelta(months=1)).strftime("%Y%m") # 下个月时间 
-        if next_month in list(Prism_db.Prism_select("SELECT JNJ_Date FROM OrderTarget")['JNJ_Date']):
+        if next_month in list(PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM OrderTarget")['JNJ_Date']):
             SQL_select_target = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-            Target_amount = Prism_db.Prism_select(SQL_select_target)['order_target'].iloc[0]
+            Target_amount = PrismDatabaseOperation.Prism_select(SQL_select_target)['order_target'].iloc[0]
             lb_target_amount = Label(frame,text=re_round(Target_amount),font=('黑体',15),
                                      width=15,height=2,anchor="e",bg='WhiteSmoke')
             lb_target_amount.place(x=820,y=3)
@@ -3647,10 +3591,10 @@ def modify_Replenishment():
                           relativedelta(months=1)).strftime("%Y%m") # 下个月时间 
                 for i in range(4):
                     SQL_update = "UPDATE AdjustRepPlan SET RepWeek_QTY = "+                     str(df_now.iloc[0,i+4].replace(",",""))+" WHERE JNJ_Date='"+next_month+                     "' AND Material='"+df_now["规格型号"].iloc[0]+"' AND week_No='"+                     df_now.columns[i+4]+"';"
-                    Prism_db.Prism_update(SQL_update)
+                    PrismDatabaseOperation.Prism_update(SQL_update)
                 # 更新备注
                 SQL_update_remark = "UPDATE AdjustRepPlan SET Rep_Remark = '"+                 str(df_now.iloc[0,8])+"' WHERE JNJ_Date='"+next_month+"' AND Material='"+                 df_now["规格型号"].iloc[0]+"' AND week_No='"+df_now.columns[4]+"';"
-                Prism_db.Prism_update(SQL_update_remark)
+                PrismDatabaseOperation.Prism_update(SQL_update_remark)
                 
                 # 刷新界面,直接将修改好的信息复制到主界面
                 for i in range(6):
@@ -3659,7 +3603,7 @@ def modify_Replenishment():
                 # 重新计算value
                 # 读取补货计划
                 SQL_AdjustRepPlan = "SELECT * From AdjustRepPlan WHERE JNJ_Date= "+next_month+";"
-                AdjustRepPlan = Prism_db.Prism_select(SQL_AdjustRepPlan)
+                AdjustRepPlan = PrismDatabaseOperation.Prism_select(SQL_AdjustRepPlan)
                 if AdjustRepPlan.empty:
                     lack.append("补货计划")
                 # Rep_Remark存储在W1中
@@ -3717,7 +3661,7 @@ def modify_Replenishment():
             entry_input.place(x=820,y=10)
             # 插入数据库中的目标金额
             SQL_OrderTarget = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-            OrderTarget_amount = Prism_db.Prism_select(SQL_OrderTarget)
+            OrderTarget_amount = PrismDatabaseOperation.Prism_select(SQL_OrderTarget)
             entry_input.insert(0,OrderTarget_amount["order_target"].iloc[0])
             
             # 确认输入函数，并将输入数据更新至数据库
@@ -3725,21 +3669,21 @@ def modify_Replenishment():
                 # 保存数据库并以最后的标准为主，方法：先插入下个月信息，再更新输入信息
                 # 如果已存在于数据库，则直接更新，否则新增空的过度变量再更新
                 if next_month in list(
-                    Prism_db.Prism_select("SELECT JNJ_Date FROM OrderTarget")["JNJ_Date"]):
+                    PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM OrderTarget")["JNJ_Date"]):
                     # 覆盖输入数据
                     SQL_delete = "DELETE FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-                    Prism_db.Prism_delete(SQL_delete)
+                    PrismDatabaseOperation.Prism_delete(SQL_delete)
                     OrderTarget = pd.DataFrame(data={'JNJ_Date':[next_month],
                                                      'order_target':[float(entry_input.get())]})
-                    Prism_db.Prism_insert('OrderTarget',OrderTarget)
+                    PrismDatabaseOperation.Prism_insert('OrderTarget',OrderTarget)
                 else:
                     OrderTarget = pd.DataFrame(data={'JNJ_Date':[next_month],
                                                      'order_target':[float(entry_input.get())]})
-                    Prism_db.Prism_insert('OrderTarget',OrderTarget)
+                    PrismDatabaseOperation.Prism_insert('OrderTarget',OrderTarget)
 
 
                 SQL_select_target = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-                Target_amount = Prism_db.Prism_select(SQL_select_target)['order_target'].iloc[0]
+                Target_amount = PrismDatabaseOperation.Prism_select(SQL_select_target)['order_target'].iloc[0]
                 lb_target_amount = Label(frame,text=re_round(Target_amount),anchor="e",
                                          font=('黑体',15),width=15,height=2,bg='WhiteSmoke')
                 lb_target_amount.place(x=820,y=3)
@@ -3805,10 +3749,10 @@ def Access_tracking():
     
     # 将调整后的补货计划赋值给rolling做初值
     SQL_adjrolling = "SELECT JNJ_Date FROM AdjustRollingRepPlan"
-    if next_month not in list(Prism_db.Prism_select(SQL_adjrolling)['JNJ_Date']):
+    if next_month not in list(PrismDatabaseOperation.Prism_select(SQL_adjrolling)['JNJ_Date']):
         SQL_AdjustRepPlan = "SELECT * FROM AdjustRepPlan WHERE JNJ_Date='"+         next_month+"';"
-        AdjustRepPlan = Prism_db.Prism_select(SQL_AdjustRepPlan)
-        Prism_db.Prism_insert('AdjustRollingRepPlan',AdjustRepPlan)
+        AdjustRepPlan = PrismDatabaseOperation.Prism_select(SQL_AdjustRepPlan)
+        PrismDatabaseOperation.Prism_insert('AdjustRollingRepPlan',AdjustRepPlan)
     # 到货数据上传
     def updata_WeeklyInbound():
         try:
@@ -3830,23 +3774,23 @@ def Access_tracking():
                 weekly_inbound = weekly_inbound[["JNJ_Date","Material","Inboundweek_QTY",'week_No']]
 
                 # 若已存在则删除后替换
-                wk_no = list(Prism_db.Prism_select(
+                wk_no = list(PrismDatabaseOperation.Prism_select(
                     "SELECT week_No FROM WeeklyInbound WHERE JNJ_Date = '"+
                      filename[-13:-7]+"';")["week_No"].unique())
                 # 读取主数据
                 SQL_ProductMaster_all = "SELECT Material From ProductMaster;"
-                ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+                ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
                 # 检查是否都在ProductMaster里
                 lack_material = weekly_inbound[~weekly_inbound["Material"].isin(
                     ProductMaster_all["Material"])]
                 if lack_material.empty:
                     if (filename[-7:-5] in wk_no) and (len(wk_no) != 0):
                         SQL_delete = "DELETE FROM WeeklyInbound WHERE JNJ_Date = '"+                         jnj_date+"' AND week_No = '"+week_No+"';"
-                        Prism_db.Prism_delete(SQL_delete)
-                        Prism_db.Prism_insert("WeeklyInbound",weekly_inbound)
+                        PrismDatabaseOperation.Prism_delete(SQL_delete)
+                        PrismDatabaseOperation.Prism_insert("WeeklyInbound",weekly_inbound)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     else:
-                        Prism_db.Prism_insert("WeeklyInbound",weekly_inbound)
+                        PrismDatabaseOperation.Prism_insert("WeeklyInbound",weekly_inbound)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     acl_track() # 同步更新计算
                 else:
@@ -3857,7 +3801,7 @@ def Access_tracking():
                                                               '安全库存天数'])
                     to_updata["规格型号"] = lack_material['Material']
                     to_updata["预测状态"] = "MTS"
-                    MasterData.master_update_bacth(to_updata)
+                    MasterData.master_update_batch(to_updata)
         except:
             tkinter.messagebox.showerror("错误","更新数据失败，请重新上传！")
     
@@ -3892,21 +3836,21 @@ def Access_tracking():
                                                      'week_No']]
                 # 若已存在则删除后替换
                 sql_wk = "SELECT week_No FROM WeeklyOrder WHERE JNJ_Date = '"+jnj_date+"';"
-                wk_no = list(Prism_db.Prism_select(sql_wk)["week_No"].unique())
+                wk_no = list(PrismDatabaseOperation.Prism_select(sql_wk)["week_No"].unique())
                 # 读取主数据
                 SQL_ProductMaster_all = "SELECT Material From ProductMaster;"
-                ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+                ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
                 # 检查是否都在ProductMaster里
                 lack_material = weekly_order[~weekly_order["Material"].isin(
                     ProductMaster_all["Material"])]
                 if lack_material.empty:
                     if (week_No in wk_no) and (len(wk_no) != 0):
                         SQL_delete = "DELETE FROM WeeklyOrder WHERE JNJ_Date = '"+                         jnj_date+"' AND week_No = '"+week_No+"';"
-                        Prism_db.Prism_delete(SQL_delete)
-                        Prism_db.Prism_insert("WeeklyOrder",weekly_order)
+                        PrismDatabaseOperation.Prism_delete(SQL_delete)
+                        PrismDatabaseOperation.Prism_insert("WeeklyOrder",weekly_order)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     else:
-                        Prism_db.Prism_insert("WeeklyOrder",weekly_order)
+                        PrismDatabaseOperation.Prism_insert("WeeklyOrder",weekly_order)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     acl_track() # 同步更新计算
                 else:
@@ -3917,7 +3861,7 @@ def Access_tracking():
                                                               '安全库存天数'])
                     to_updata["规格型号"] = lack_material['Material']
                     to_updata["预测状态"] = "MTS"
-                    MasterData.master_update_bacth(to_updata)
+                    MasterData.master_update_batch(to_updata)
         except:
             tkinter.messagebox.showerror("错误","更新数据失败，请重新上传！")
     
@@ -3934,13 +3878,13 @@ def Access_tracking():
         lack = []
         # 导入主数据
         SQL_ProductMaster = "SELECT Material,GTS,FCST_state From ProductMaster "+         "WHERE FCST_state = 'MTS';"
-        ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
 
         # 获取到货信息
         next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                       relativedelta(months=1)).strftime("%Y%m") # 下个月时间 
         SQL_WeeklyInbound = "SELECT * From WeeklyInbound WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyInbound = Prism_db.Prism_select(SQL_WeeklyInbound)
+        WeeklyInbound = PrismDatabaseOperation.Prism_select(SQL_WeeklyInbound)
         # 提前对其进行聚合
         WeeklyInbound = WeeklyInbound.groupby(by=["JNJ_Date","Material","week_No"],
                                               as_index=False).sum()
@@ -3949,25 +3893,25 @@ def Access_tracking():
 
         # 获取订货信息
         SQL_WeeklyOrder = "SELECT * From WeeklyOrder WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyOrder = Prism_db.Prism_select(SQL_WeeklyOrder)
+        WeeklyOrder = PrismDatabaseOperation.Prism_select(SQL_WeeklyOrder)
         if WeeklyOrder.empty:
             lack.append("实际订货")
 
         # 获取指标
         SQL_OrderTarget = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-        OrderTarget = Prism_db.Prism_select(SQL_OrderTarget)
+        OrderTarget = PrismDatabaseOperation.Prism_select(SQL_OrderTarget)
         if OrderTarget.empty:
             lack.append("指标")
 
         # 读取补货计划
         SQL_Rep_plan = "SELECT JNJ_Date,Material,RepWeek_QTY,week_No FROM"+         " AdjustRepPlan WHERE JNJ_Date = '"+next_month+"';"
-        Rep_plan = Prism_db.Prism_select(SQL_Rep_plan)
+        Rep_plan = PrismDatabaseOperation.Prism_select(SQL_Rep_plan)
         if Rep_plan.empty:
             lack.append("补货计划")
 
         # 上个月在途
         SQL_Intransit = "SELECT * FROM Intransit WHERE JNJ_Date = '"+JNJ_Month(1)[0]+"';"
-        Intransit = Prism_db.Prism_select(SQL_Intransit)
+        Intransit = PrismDatabaseOperation.Prism_select(SQL_Intransit)
         if Intransit.empty:
             lack.append("上月在途")
 
@@ -3975,12 +3919,12 @@ def Access_tracking():
             tkinter.messagebox.showerror("警告",str(lack)+"数据缺失！")
 
         # Week
-        week_No = Prism_db.Prism_select("SELECT week_No FROM WeeklyInbound WHERE JNJ_Date = '"+
+        week_No = PrismDatabaseOperation.Prism_select("SELECT week_No FROM WeeklyInbound WHERE JNJ_Date = '"+
                                         next_month+"';")
 
         # 计算上个月在途金额
         SQL_ProductMaster_all = "SELECT Material,GTS,FCST_state From ProductMaster;"
-        ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+        ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
         merge_Intransit = pd.merge(Intransit,ProductMaster_all,on='Material',how='left')
         merge_Intransit.fillna(0,inplace=True)
         Intransit_value = int(sum(merge_Intransit['GTS']*merge_Intransit['Intransit_QTY']))
@@ -4342,7 +4286,7 @@ def rolling_rep():
     # wk_No，以WeeklyOutbound的周数为准
     SQL_week = "SELECT week_No FROM WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
     try:
-        wk_No = sorted(list(Prism_db.Prism_select(SQL_week)["week_No"].unique()))[-1]
+        wk_No = sorted(list(PrismDatabaseOperation.Prism_select(SQL_week)["week_No"].unique()))[-1]
     except:
         wk_No = "无"
         
@@ -4357,10 +4301,10 @@ def rolling_rep():
     
     # 初始值
     SQL_adjrolling = "SELECT JNJ_Date FROM AdjustRollingRepPlan"
-    if next_month not in list(Prism_db.Prism_select(SQL_adjrolling)['JNJ_Date']):
+    if next_month not in list(PrismDatabaseOperation.Prism_select(SQL_adjrolling)['JNJ_Date']):
         SQL_AdjustRepPlan = "SELECT * FROM AdjustRepPlan WHERE JNJ_Date='"+         next_month+"';"
-        AdjustRepPlan = Prism_db.Prism_select(SQL_AdjustRepPlan)
-        Prism_db.Prism_insert('AdjustRollingRepPlan',AdjustRepPlan)
+        AdjustRepPlan = PrismDatabaseOperation.Prism_select(SQL_AdjustRepPlan)
+        PrismDatabaseOperation.Prism_insert('AdjustRollingRepPlan',AdjustRepPlan)
         
     #出货数据上传
     def update_WeeklyOutbound():
@@ -4385,25 +4329,25 @@ def rolling_rep():
                                                      'week_No']]
                 # 若已存在则删除后替换
                 SQL_wk =  "SELECT week_No FROM WeeklyOutbound WHERE JNJ_Date = '"+jnj_date+"';"
-                wk_no = list(Prism_db.Prism_select(SQL_wk)["week_No"].unique())
+                wk_no = list(PrismDatabaseOperation.Prism_select(SQL_wk)["week_No"].unique())
                 # 读取主数据
                 SQL_ProductMaster_all = "SELECT Material From ProductMaster;"
-                ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+                ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
                 # 检查是否都在ProductMaster里
                 lack_material = weekly_outbound[~weekly_outbound["Material"].isin(
                     ProductMaster_all["Material"])]
                 if lack_material.empty:
                     if (week_No in wk_no) and (len(wk_no) != 0):
                         SQL_delete = "DELETE FROM WeeklyOutbound WHERE JNJ_Date = '"+                         jnj_date+"' AND week_No = '"+week_No+"';"
-                        Prism_db.Prism_delete(SQL_delete)
-                        Prism_db.Prism_insert("WeeklyOutbound",weekly_outbound)
+                        PrismDatabaseOperation.Prism_delete(SQL_delete)
+                        PrismDatabaseOperation.Prism_insert("WeeklyOutbound",weekly_outbound)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     else:
-                        Prism_db.Prism_insert("WeeklyOutbound",weekly_outbound)
+                        PrismDatabaseOperation.Prism_insert("WeeklyOutbound",weekly_outbound)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     # wk_No，以WeeklyOutbound的周数为准
                     SQL_week = "SELECT week_No FROM WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
-                    wk_No = sorted(list(Prism_db.Prism_select(SQL_week)["week_No"].unique()))[-1]
+                    wk_No = sorted(list(PrismDatabaseOperation.Prism_select(SQL_week)["week_No"].unique()))[-1]
                     lb_week_Outbound = Label(frame,text="更新至 "+wk_No,font=('黑体',10),bg='WhiteSmoke',
                               fg='DimGray',anchor='w',height=2)
                     lb_week_Outbound.place(x=280,y=15)
@@ -4415,7 +4359,7 @@ def rolling_rep():
                                                               '安全库存天数'])
                     to_updata["规格型号"] = lack_material['Material']
                     to_updata["预测状态"] = "MTS"
-                    MasterData.master_update_bacth(to_updata)
+                    MasterData.master_update_batch(to_updata)
         except:
             tkinter.messagebox.showerror("错误","更新数据失败，请重新上传！")
     
@@ -4454,26 +4398,26 @@ def rolling_rep():
                                                      'week_No']]
                 # 若已存在则删除后替换
                 sql_wk = "SELECT week_No FROM WeeklyBackorder WHERE JNJ_Date = '"+jnj_date+"';"
-                wk_no = list(Prism_db.Prism_select(sql_wk)["week_No"].unique())
+                wk_no = list(PrismDatabaseOperation.Prism_select(sql_wk)["week_No"].unique())
                 # 读取主数据
                 SQL_ProductMaster_all = "SELECT Material From ProductMaster;"
-                ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+                ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
                 # 检查是否都在ProductMaster里
                 lack_material = weekly_backorder[~weekly_backorder["Material"].isin(
                     ProductMaster_all["Material"])]
                 if lack_material.empty:
                     if (week_No in wk_no) and (len(wk_no) != 0):
                         SQL_delete = "DELETE FROM WeeklyBackorder WHERE JNJ_Date = '"+                         jnj_date+"' AND week_No = '"+week_No+"';"
-                        Prism_db.Prism_delete(SQL_delete)
-                        Prism_db.Prism_insert("WeeklyBackorder",weekly_backorder)
+                        PrismDatabaseOperation.Prism_delete(SQL_delete)
+                        PrismDatabaseOperation.Prism_insert("WeeklyBackorder",weekly_backorder)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     else:
-                        Prism_db.Prism_insert("WeeklyBackorder",weekly_backorder)
+                        PrismDatabaseOperation.Prism_insert("WeeklyBackorder",weekly_backorder)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     # wk_No，WeeklyBackorder
                     SQL_Backorder = "SELECT week_No FROM WeeklyBackorder WHERE JNJ_Date = '"+                     next_month+"';"
                     wk_No_Backorder = sorted(list(
-                        Prism_db.Prism_select(SQL_Backorder)["week_No"].unique()))[-1]
+                        PrismDatabaseOperation.Prism_select(SQL_Backorder)["week_No"].unique()))[-1]
                     lb_week_Backorder = Label(frame,text="更新至 "+wk_No_Backorder,font=('黑体',10),
                                               bg='WhiteSmoke',fg='DimGray',anchor='w',height=2)
                     lb_week_Backorder.place(x=280,y=55)
@@ -4486,7 +4430,7 @@ def rolling_rep():
                                                               '安全库存天数'])
                     to_updata["规格型号"] = lack_material['Material']
                     to_updata["预测状态"] = "MTS"
-                    MasterData.master_update_bacth(to_updata)
+                    MasterData.master_update_batch(to_updata)
         except:
             tkinter.messagebox.showerror("错误","更新数据失败，请重新上传！")
     
@@ -4498,7 +4442,7 @@ def rolling_rep():
     # wk_No，WeeklyBackorder
     SQL_Backorder = "SELECT week_No FROM WeeklyBackorder WHERE JNJ_Date = '"+next_month+"';"
     try:
-        wk_No_Backorder = sorted(list(Prism_db.Prism_select(SQL_Backorder)["week_No"].unique()))[-1]
+        wk_No_Backorder = sorted(list(PrismDatabaseOperation.Prism_select(SQL_Backorder)["week_No"].unique()))[-1]
     except:
         wk_No_Backorder = "无"
     lb_week_Backorder = Label(frame,text="更新至 "+wk_No_Backorder,font=('黑体',10),bg='WhiteSmoke',
@@ -4529,28 +4473,28 @@ def rolling_rep():
                 weekly_inbound = weekly_inbound[["JNJ_Date","Material","Inboundweek_QTY",'week_No']]
 
                 # 若已存在则删除后替换
-                wk_no = list(Prism_db.Prism_select(
+                wk_no = list(PrismDatabaseOperation.Prism_select(
                     "SELECT week_No FROM WeeklyInbound WHERE JNJ_Date = '"+
                      filename[-13:-7]+"';")["week_No"].unique())
                 # 读取主数据
                 SQL_ProductMaster_all = "SELECT Material From ProductMaster;"
-                ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+                ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
                 # 检查是否都在ProductMaster里
                 lack_material = weekly_inbound[~weekly_inbound["Material"].isin(
                     ProductMaster_all["Material"])]
                 if lack_material.empty:
                     if (filename[-7:-5] in wk_no) and (len(wk_no) != 0):
                         SQL_delete = "DELETE FROM WeeklyInbound WHERE JNJ_Date = '"+                         jnj_date+"' AND week_No = '"+week_No+"';"
-                        Prism_db.Prism_delete(SQL_delete)
-                        Prism_db.Prism_insert("WeeklyInbound",weekly_inbound)
+                        PrismDatabaseOperation.Prism_delete(SQL_delete)
+                        PrismDatabaseOperation.Prism_insert("WeeklyInbound",weekly_inbound)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     else:
-                        Prism_db.Prism_insert("WeeklyInbound",weekly_inbound)
+                        PrismDatabaseOperation.Prism_insert("WeeklyInbound",weekly_inbound)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     # wk_No，WeeklyInbound
                     SQL_Inbound = "SELECT week_No FROM WeeklyInbound WHERE JNJ_Date = '"+                     next_month+"';"
                     wk_No_Inbound = sorted(list(
-                        Prism_db.Prism_select(SQL_Inbound)["week_No"].unique()))[-1]
+                        PrismDatabaseOperation.Prism_select(SQL_Inbound)["week_No"].unique()))[-1]
                     lb_week_Inbound = Label(frame,text="更新至 "+wk_No_Inbound,font=('黑体',10),
                                             bg='WhiteSmoke',fg='DimGray',anchor='w',height=2)
                     lb_week_Inbound.place(x=280,y=95)
@@ -4563,7 +4507,7 @@ def rolling_rep():
                                                               '安全库存天数'])
                     to_updata["规格型号"] = lack_material['Material']
                     to_updata["预测状态"] = "MTS"
-                    MasterData.master_update_bacth(to_updata)
+                    MasterData.master_update_batch(to_updata)
         except:
             tkinter.messagebox.showerror("错误","更新数据失败，请重新上传！")
         
@@ -4574,7 +4518,7 @@ def rolling_rep():
     # wk_No，WeeklyInbound
     SQL_Inbound = "SELECT week_No FROM WeeklyInbound WHERE JNJ_Date = '"+next_month+"';"
     try:
-        wk_No_Inbound = sorted(list(Prism_db.Prism_select(SQL_Inbound)["week_No"].unique()))[-1]
+        wk_No_Inbound = sorted(list(PrismDatabaseOperation.Prism_select(SQL_Inbound)["week_No"].unique()))[-1]
     except:
         wk_No_Inbound = "无"
     lb_week_Inbound = Label(frame,text="更新至 "+wk_No_Inbound,font=('黑体',10),bg='WhiteSmoke',
@@ -4607,26 +4551,26 @@ def rolling_rep():
                                                      'week_No']]
                 # 若已存在则删除后替换
                 sql_wk = "SELECT week_No FROM WeeklyOrder WHERE JNJ_Date = '"+jnj_date+"';"
-                wk_no = list(Prism_db.Prism_select(sql_wk)["week_No"].unique())
+                wk_no = list(PrismDatabaseOperation.Prism_select(sql_wk)["week_No"].unique())
                 # 读取主数据
                 SQL_ProductMaster_all = "SELECT Material From ProductMaster;"
-                ProductMaster_all = Prism_db.Prism_select(SQL_ProductMaster_all)
+                ProductMaster_all = PrismDatabaseOperation.Prism_select(SQL_ProductMaster_all)
                 # 检查是否都在ProductMaster里
                 lack_material = weekly_order[~weekly_order["Material"].isin(
                     ProductMaster_all["Material"])]
                 if lack_material.empty:
                     if (week_No in wk_no) and (len(wk_no) != 0):
                         SQL_delete = "DELETE FROM WeeklyOrder WHERE JNJ_Date = '"+                         jnj_date+"' AND week_No = '"+week_No+"';"
-                        Prism_db.Prism_delete(SQL_delete)
-                        Prism_db.Prism_insert("WeeklyOrder",weekly_order)
+                        PrismDatabaseOperation.Prism_delete(SQL_delete)
+                        PrismDatabaseOperation.Prism_insert("WeeklyOrder",weekly_order)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     else:
-                        Prism_db.Prism_insert("WeeklyOrder",weekly_order)
+                        PrismDatabaseOperation.Prism_insert("WeeklyOrder",weekly_order)
                         tkinter.messagebox.showinfo("成功","导入成功！")
                     # wk_No，WeeklyOrder
                     SQL_Order = "SELECT week_No FROM WeeklyOrder WHERE JNJ_Date = '"+                     next_month+"';"
                     wk_No_Order = sorted(list(
-                        Prism_db.Prism_select(SQL_Order)["week_No"].unique()))[-1]
+                        PrismDatabaseOperation.Prism_select(SQL_Order)["week_No"].unique()))[-1]
                     lb_week_Order = Label(frame,text="更新至 "+wk_No_Order,font=('黑体',10),
                                           bg='WhiteSmoke',fg='DimGray',anchor='w',height=2)
                     lb_week_Order.place(x=280,y=135)
@@ -4639,7 +4583,7 @@ def rolling_rep():
                                                               '安全库存天数'])
                     to_updata["规格型号"] = lack_material['Material']
                     to_updata["预测状态"] = "MTS"
-                    MasterData.master_update_bacth(to_updata)
+                    MasterData.master_update_batch(to_updata)
         except:
             tkinter.messagebox.showerror("错误","更新数据失败，请重新上传！")
     
@@ -4649,7 +4593,7 @@ def rolling_rep():
     # wk_No，WeeklyOrder
     SQL_Order = "SELECT week_No FROM WeeklyOrder WHERE JNJ_Date = '"+next_month+"';"
     try:
-        wk_No_Order = sorted(list(Prism_db.Prism_select(SQL_Order)["week_No"].unique()))[-1]
+        wk_No_Order = sorted(list(PrismDatabaseOperation.Prism_select(SQL_Order)["week_No"].unique()))[-1]
     except:
         wk_No_Order = "无"
     lb_week_Order = Label(frame,text="更新至 "+wk_No_Order,font=('黑体',10),bg='WhiteSmoke',
@@ -4666,14 +4610,14 @@ def rolling_rep():
         # 读取并合并数据
         # 导入主数据
         SQL_ProductMaster = "SELECT Material,GTS,FCST_state,ABC,MOQ From ProductMaster "
-        ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
         ProductMaster.rename(columns={"ABC":"Class"},inplace=True)
 
         # 下个月时间 
         next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                       relativedelta(months=1)).strftime("%Y%m")
         # 获取补货权值weekly_pattern
-        WeeklyPattern = Prism_db.Prism_select("SELECT * FROM WeeklyPattern")
+        WeeklyPattern = PrismDatabaseOperation.Prism_select("SELECT * FROM WeeklyPattern")
         WK1 = WeeklyPattern[WeeklyPattern['week']=='WK1']['pattern'].iloc[0]
         WK2 = WeeklyPattern[WeeklyPattern['week']=='WK2']['pattern'].iloc[0]
         WK3 = WeeklyPattern[WeeklyPattern['week']=='WK3']['pattern'].iloc[0]
@@ -4683,34 +4627,34 @@ def rolling_rep():
 
         # wk_No，以WeeklyOutbound的周数为准
         SQL_week = "SELECT week_No FROM WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
-        wk_No = sorted(list(Prism_db.Prism_select(SQL_week)["week_No"].unique()))[-1]
+        wk_No = sorted(list(PrismDatabaseOperation.Prism_select(SQL_week)["week_No"].unique()))[-1]
 
         # ⭐每周获取出货数据
         SQL_WeeklyOutbound = "SELECT Material,Outboundweek_QTY,week_No From "+         "WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyOutbound = Prism_db.Prism_select(SQL_WeeklyOutbound)
+        WeeklyOutbound = PrismDatabaseOperation.Prism_select(SQL_WeeklyOutbound)
         if WeeklyOutbound.empty:
             lack.append("出货")
 
         # ⭐每周下单量数据
         SQL_WeeklyOrder = "SELECT Material,Orderweek_QTY,week_No FROM "+         "WeeklyOrder WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyOrder = Prism_db.Prism_select(SQL_WeeklyOrder)
+        WeeklyOrder = PrismDatabaseOperation.Prism_select(SQL_WeeklyOrder)
         if WeeklyOrder.empty:
             lack.append("每周下单数据")
 
         # ⭐每周取最新版的缺货数据
         SQL_Backorder = "SELECT Material,Backorderweek_QTY,week_No FROM "+         "WeeklyBackorder WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyBackorder = Prism_db.Prism_select(SQL_Backorder)
+        WeeklyBackorder = PrismDatabaseOperation.Prism_select(SQL_Backorder)
         if WeeklyBackorder.empty:
             lack.append("每周缺货数据")
 
         # 调整后的需求数据
         SQL_AdjustFCSTDemand = "SELECT Material,FCST_Demand1 From AdjustFCSTDemand"+         " WHERE JNJ_Date = '"+JNJ_Month(1)[0]+"';"
-        AdjustFCSTDemand = Prism_db.Prism_select(SQL_AdjustFCSTDemand)
+        AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_AdjustFCSTDemand)
 
         # 安全库存
         # 出库数据3个月
         SQL_Outbound = "SELECT * From Outbound WHERE JNJ_Date = '"+JNJ_Month(3)[0]+         "' OR JNJ_Date = '"+JNJ_Month(3)[1]+"' OR JNJ_Date = '"+JNJ_Month(3)[2]+"';"
-        Outbound = Prism_db.Prism_select(SQL_Outbound)
+        Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
 
         Outbound = Outbound.pivot_table(index='Material',columns='JNJ_Date')
         Outbound.reset_index(inplace=True)
@@ -4722,25 +4666,25 @@ def rolling_rep():
 
         # 安全库存天数
         SQL_SafetyStockDay = "SELECT [Class],[Safetystock_Day] From SafetyStockDay;"
-        SafetyStockDay = Prism_db.Prism_select(SQL_SafetyStockDay)
+        SafetyStockDay = PrismDatabaseOperation.Prism_select(SQL_SafetyStockDay)
         if SafetyStockDay.empty:
             lack.append("安全库存天数")
 
         # 上月Intransit
         SQL_Intransit = "SELECT Material,Intransit_QTY From Intransit WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
-        Intransit = Prism_db.Prism_select(SQL_Intransit)
+        Intransit = PrismDatabaseOperation.Prism_select(SQL_Intransit)
 
         # 上月Onhand_QTY
         SQL_Onhand = "SELECT Material,Onhand_QTY From Onhand WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
-        Onhand = Prism_db.Prism_select(SQL_Onhand)
+        Onhand = PrismDatabaseOperation.Prism_select(SQL_Onhand)
 
         # 上月Putaway
         SQL_Putaway = "SELECT Material,Putaway_QTY From Putaway WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
-        Putaway = Prism_db.Prism_select(SQL_Putaway)
+        Putaway = PrismDatabaseOperation.Prism_select(SQL_Putaway)
 
         # 读取补货计划
         SQL_Rep_plan = "SELECT Material,RepWeek_QTY,week_No FROM"+         " AdjustRollingRepPlan WHERE JNJ_Date = '"+next_month+"';"
-        Rep_plan = Prism_db.Prism_select(SQL_Rep_plan)
+        Rep_plan = PrismDatabaseOperation.Prism_select(SQL_Rep_plan)
         if Rep_plan.empty:
             lack.append("补货计划")
 
@@ -4817,14 +4761,14 @@ def rolling_rep():
         # 读取并合并数据
         # 导入主数据
         SQL_ProductMaster = "SELECT Material,GTS,FCST_state,ABC,MOQ From ProductMaster "
-        ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
         ProductMaster.rename(columns={"ABC":"Class"},inplace=True)
 
         # 下个月时间 
         next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                       relativedelta(months=1)).strftime("%Y%m")
         # 获取补货权值weekly_pattern
-        WeeklyPattern = Prism_db.Prism_select("SELECT * FROM WeeklyPattern")
+        WeeklyPattern = PrismDatabaseOperation.Prism_select("SELECT * FROM WeeklyPattern")
         WK1 = WeeklyPattern[WeeklyPattern['week']=='WK1']['pattern'].iloc[0]
         WK2 = WeeklyPattern[WeeklyPattern['week']=='WK2']['pattern'].iloc[0]
         WK3 = WeeklyPattern[WeeklyPattern['week']=='WK3']['pattern'].iloc[0]
@@ -4835,38 +4779,38 @@ def rolling_rep():
         # wk_No，以WeeklyOutbound的周数为准
         SQL_week = "SELECT week_No FROM WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
         try:
-            wk_No = sorted(list(Prism_db.Prism_select(SQL_week)["week_No"].unique()))[-1]
+            wk_No = sorted(list(PrismDatabaseOperation.Prism_select(SQL_week)["week_No"].unique()))[-1]
         except:
             wk_No = "W1"
 
         # ⭐每周获取出货数据
         SQL_WeeklyOutbound = "SELECT Material,Outboundweek_QTY,week_No From "+         "WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyOutbound = Prism_db.Prism_select(SQL_WeeklyOutbound)
+        WeeklyOutbound = PrismDatabaseOperation.Prism_select(SQL_WeeklyOutbound)
         if WeeklyOutbound.empty:
             lack.append("出货")
 
         # ⭐每周下单量数据
         SQL_WeeklyOrder = "SELECT Material,Orderweek_QTY,week_No FROM "+         "WeeklyOrder WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyOrder = Prism_db.Prism_select(SQL_WeeklyOrder)
+        WeeklyOrder = PrismDatabaseOperation.Prism_select(SQL_WeeklyOrder)
         if WeeklyOrder.empty:
             lack.append("每周下单数据")
 
         # ⭐每周取最新版的缺货数据
         SQL_Backorder = "SELECT Material,Backorderweek_QTY,week_No FROM "+         "WeeklyBackorder WHERE JNJ_Date = '"+next_month+"';"
-        WeeklyBackorder = Prism_db.Prism_select(SQL_Backorder)
+        WeeklyBackorder = PrismDatabaseOperation.Prism_select(SQL_Backorder)
         if WeeklyBackorder.empty:
             lack.append("每周缺货数据")
 
         # 调整后的需求数据
         SQL_AdjustFCSTDemand = "SELECT Material,FCST_Demand1 From AdjustFCSTDemand"+         " WHERE JNJ_Date = '"+JNJ_Month(1)[0]+"';"
-        AdjustFCSTDemand = Prism_db.Prism_select(SQL_AdjustFCSTDemand)
+        AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_AdjustFCSTDemand)
 #         if AdjustFCSTDemand.empty:
 #             lack.append("二级需求")
 
         # 安全库存
         # 出库数据3个月
         SQL_Outbound = "SELECT * From Outbound WHERE JNJ_Date = '"+JNJ_Month(3)[0]+         "' OR JNJ_Date = '"+JNJ_Month(3)[1]+"' OR JNJ_Date = '"+JNJ_Month(3)[2]+"';"
-        Outbound = Prism_db.Prism_select(SQL_Outbound)
+        Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
 #         if Outbound.empty:
 #             lack.append("出库数据")
         Outbound = Outbound.pivot_table(index='Material',columns='JNJ_Date')
@@ -4879,31 +4823,31 @@ def rolling_rep():
 
         # 安全库存天数
         SQL_SafetyStockDay = "SELECT [Class],[Safetystock_Day] From SafetyStockDay;"
-        SafetyStockDay = Prism_db.Prism_select(SQL_SafetyStockDay)
+        SafetyStockDay = PrismDatabaseOperation.Prism_select(SQL_SafetyStockDay)
         if SafetyStockDay.empty:
             lack.append("安全库存天数")
 
         # 上月Intransit
         SQL_Intransit = "SELECT Material,Intransit_QTY From Intransit WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
-        Intransit = Prism_db.Prism_select(SQL_Intransit)
+        Intransit = PrismDatabaseOperation.Prism_select(SQL_Intransit)
 #         if Intransit.empty:
 #             lack.append("上个月在途")
 
         # 上月Onhand_QTY
         SQL_Onhand = "SELECT Material,Onhand_QTY From Onhand WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
-        Onhand = Prism_db.Prism_select(SQL_Onhand)
+        Onhand = PrismDatabaseOperation.Prism_select(SQL_Onhand)
 #         if Onhand.empty:
 #             lack.append("上个月可发")
 
         # 上月Putaway
         SQL_Putaway = "SELECT Material,Putaway_QTY From Putaway WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
-        Putaway = Prism_db.Prism_select(SQL_Putaway)
+        Putaway = PrismDatabaseOperation.Prism_select(SQL_Putaway)
 #         if Putaway.empty:
 #             lack.append("上个月预入库")
 
         # 读取补货计划
         SQL_Rep_plan = "SELECT Material,RepWeek_QTY,week_No FROM"+         " AdjustRollingRepPlan WHERE JNJ_Date = '"+next_month+"';"
-        Rep_plan = Prism_db.Prism_select(SQL_Rep_plan)
+        Rep_plan = PrismDatabaseOperation.Prism_select(SQL_Rep_plan)
         if Rep_plan.empty:
             lack.append("补货计划")
 
@@ -5051,14 +4995,14 @@ def rolling_rep():
         RollingRep["Rep_Remark"] = ""
         # 判断当前数据库中的月份
         sql_jnj_date = "SELECT JNJ_Date FROM AdjustRollingRepPlan"
-        jnj_date = list(Prism_db.Prism_select(sql_jnj_date)['JNJ_Date'])
+        jnj_date = list(PrismDatabaseOperation.Prism_select(sql_jnj_date)['JNJ_Date'])
         # 若已有数据则直接覆盖
         if next_month in jnj_date:
             SQL_delete = "DELETE FROM AdjustRollingRepPlan WHERE JNJ_Date = '"+next_month+"';"
-            Prism_db.Prism_delete(SQL_delete)
-            Prism_db.Prism_insert('AdjustRollingRepPlan',RollingRep)
+            PrismDatabaseOperation.Prism_delete(SQL_delete)
+            PrismDatabaseOperation.Prism_insert('AdjustRollingRepPlan',RollingRep)
         else:
-            Prism_db.Prism_insert('AdjustRollingRepPlan',RollingRep)
+            PrismDatabaseOperation.Prism_insert('AdjustRollingRepPlan',RollingRep)
         
         acl_rolling(merge_all)
     
@@ -5073,7 +5017,7 @@ def rolling_rep():
         
         # 获取指标
         SQL_OrderTarget = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-        OrderTarget = Prism_db.Prism_select(SQL_OrderTarget)
+        OrderTarget = PrismDatabaseOperation.Prism_select(SQL_OrderTarget)
             
         #**********************界面显示**********************#
         
@@ -5306,24 +5250,24 @@ def rolling_rep():
             entry_input.place(x=820,y=10)
             # 插入数据库中的目标金额
             SQL_OrderTarget = "SELECT * FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-            OrderTarget_amount = Prism_db.Prism_select(SQL_OrderTarget)
+            OrderTarget_amount = PrismDatabaseOperation.Prism_select(SQL_OrderTarget)
             entry_input.insert(0,OrderTarget_amount["order_target"].iloc[0])
             # 确认输入函数，并将输入数据更新至数据库
             def input_target_amount():
                 # 保存数据库并以最后的标准为主，方法：先插入下个月信息，再更新输入信息
                 # 如果已存在于数据库，则直接更新，否则新增空的过度变量再更新
                 if next_month in list(
-                    Prism_db.Prism_select("SELECT JNJ_Date FROM OrderTarget")["JNJ_Date"]):
+                    PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM OrderTarget")["JNJ_Date"]):
                     # 覆盖输入数据
                     SQL_delete = "DELETE FROM OrderTarget WHERE JNJ_Date = '"+next_month+"';"
-                    Prism_db.Prism_delete(SQL_delete)
+                    PrismDatabaseOperation.Prism_delete(SQL_delete)
                     OrderTarget = pd.DataFrame(data={'JNJ_Date':[next_month],
                                                      'order_target':[float(entry_input.get())]})
-                    Prism_db.Prism_insert('OrderTarget',OrderTarget)
+                    PrismDatabaseOperation.Prism_insert('OrderTarget',OrderTarget)
                 else:
                     OrderTarget = pd.DataFrame(data={'JNJ_Date':[next_month],
                                                      'order_target':[float(entry_input.get())]})
-                    Prism_db.Prism_insert('OrderTarget',OrderTarget)
+                    PrismDatabaseOperation.Prism_insert('OrderTarget',OrderTarget)
 
                 Target_amount = float(entry_input.get())
                 lb_target_amount = Label(frame,text=re_round(Target_amount),anchor="e",
@@ -5402,7 +5346,7 @@ def rolling_rep():
                 cn = int(str(column).replace('#',''))
                 # wk_No，以WeeklyOutbound的周数为准
                 SQL_week = "SELECT week_No FROM WeeklyOutbound WHERE JNJ_Date = '"+next_month+"';"
-                wk_No = sorted(list(Prism_db.Prism_select(SQL_week)["week_No"].unique()))[-1]
+                wk_No = sorted(list(PrismDatabaseOperation.Prism_select(SQL_week)["week_No"].unique()))[-1]
                 if wk_No == "W1":
                     if cn  not in [5,6,4]:
                         cn = 100
@@ -5470,7 +5414,7 @@ def rolling_rep():
                 for i in range(4):
                     SQL_update = "UPDATE AdjustRollingRepPlan SET RepWeek_QTY = "+                     str(df_now.iloc[0,i+2].replace(",",""))+" WHERE JNJ_Date='"+next_month+                     "' AND Material='"+df_now["规格型号"].iloc[0]+"' AND week_No='"+                     df_now.columns[i+2]+"';"
 #                     print(SQL_update)
-                    Prism_db.Prism_update(SQL_update)
+                    PrismDatabaseOperation.Prism_update(SQL_update)
 #                 # 更新备注
 #                 SQL_update_remark = "UPDATE AdjustRollingRepPlan SET Rep_Remark = '"+ \
 #                 str(df_now.iloc[0,8])+"' WHERE JNJ_Date='"+next_month+"' AND Material='"+ \
@@ -5484,13 +5428,13 @@ def rolling_rep():
                 # 重新计算value
                 # 读取主数据
                 SQL_ProductMaster = "SELECT Material,GTS,FCST_state,ABC,MOQ From ProductMaster "
-                ProductMaster = Prism_db.Prism_select(SQL_ProductMaster)
+                ProductMaster = PrismDatabaseOperation.Prism_select(SQL_ProductMaster)
                 ProductMaster.rename(columns={"ABC":"Class"},inplace=True)
                 # 读取补货计划
                 next_month = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
                                           relativedelta(months=1)).strftime("%Y%m") # 下个月时间
                 SQL_AdjustRepPlan = "SELECT * From AdjustRollingRepPlan WHERE JNJ_Date= "+                 next_month+";"
-                AdjustRepPlan = Prism_db.Prism_select(SQL_AdjustRepPlan)
+                AdjustRepPlan = PrismDatabaseOperation.Prism_select(SQL_AdjustRepPlan)
 
                 # 数透
                 AdjustRepPlan = pd.pivot_table(AdjustRepPlan,index=["Material","JNJ_Date"],
