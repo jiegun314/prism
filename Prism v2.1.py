@@ -5,7 +5,8 @@ import time
 from tkinter.filedialog import * # 不提前引用会导致第一次运行失败？
 from tkinter import *
 from tkinter import ttk
-
+# Jeffrey - add sqlite 
+import sqlite3
 
 
 # 系统设计所需库
@@ -348,8 +349,10 @@ class PrismDatabaseOperation:
             try:
                 # 连接数据库
                 #-- coding: utf-8 --
-                conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
-                                      ';DATABASE='+database+';UID='+user+';PWD='+password)
+                # conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
+                #                       ';DATABASE='+database+';UID='+user+';PWD='+password)
+                # conn = pymssql.connect(server=server, user=user, password=password, database=database)
+                conn = sqlite3.connect('prism_data.db')
                 cursor = conn.cursor() # 句柄
             except:
                 tkinter.messagebox.showerror("错误","连接数据库失败！")
@@ -376,8 +379,9 @@ class PrismDatabaseOperation:
             charset = "gbk"               # charset编码规则中文
             try:
                 # 连接数据库
-                conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
-                                      ';DATABASE='+database+';UID='+user+';PWD='+password)
+                # conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
+                #                       ';DATABASE='+database+';UID='+user+';PWD='+password)
+                conn = sqlite3.connect('prism_data.db')
                 cursor = conn.cursor() # 句柄
                 
             except:
@@ -400,8 +404,9 @@ class PrismDatabaseOperation:
             charset = "gbk"               # charset编码规则中文
             try:
                 # 连接数据库
-                conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
-                                      ';DATABASE='+database+';UID='+user+';PWD='+password)
+                # conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
+                #                       ';DATABASE='+database+';UID='+user+';PWD='+password)
+                conn = sqlite3.connect('prism_data.db')
                 cursor = conn.cursor() # 句柄
             except:
                 tkinter.messagebox.showerror("错误","连接数据库失败！")
@@ -416,7 +421,8 @@ class PrismDatabaseOperation:
         try:
             try:
                 #  定义数据库参数,连接数据库
-                conn = create_engine('mssql+pymssql://ryan:prism123+@localhost/Prism')
+                # conn = create_engine('mssql+pymssql://ryan:prism123+@localhost/Prism')
+                conn = sqlite3.connect('prism_data.db')
             except:
                 tkinter.messagebox.showerror("错误","连接数据库失败！")
             # 附加df
