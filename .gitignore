@@ -2,3 +2,5 @@ venv/
 Picture/Button/Thumbs.db
 document/
 __pycache__/
+.gitignore
+__pycache__/prism_database_operation.cpython-39.pyc
