@@ -329,6 +329,7 @@ class MasterData:
 # 链接数据库 python 对sql数据库操作进行封装
 #-- coding: utf-8 --
 # Prism 数据库操作，输入sql语句，返回查询df、修改数据、删除数据等
+# Jeffrey - 多次服用，已经拆出来一个单的文件和类
 class PrismDatabaseOperation:
     """
     执行Prism数据库sql语句的函数，可进行增、删、改、查
@@ -431,6 +432,7 @@ class PrismDatabaseOperation:
 # 部分全局函数
 
 # 主界面文本风格设置
+# Jeffrey - 该函数没用？？
 def s_2():
     place_x = 0
     place_y = 0
@@ -440,13 +442,16 @@ def s_2():
     return place_x,place_y,font,bg,fg
 
 # 返回前N月的JNJ_Month
+# Jeffrey - 是否确保按照JNJ_Date排序
 def JNJ_Month(n):
     SQL_select_date = "SELECT JNJ_Date From Outbound"
+    # 建议修改成 select JNJ_Date FROM Outbound ORDER BY JNJ_Date
     Outbound_month = list(PrismDatabaseOperation.Prism_select(SQL_select_date)['JNJ_Date'].unique())
     last_month = sorted(Outbound_month)[-n:]
     return last_month
 
 # df含千分位字符转数字
+# Jeffrey - 该函数没用？
 def convert(item):
     if isinstance(item, str):
         if ',' not in item: 
@@ -460,6 +465,7 @@ def convert(item):
         return 'Type transformed'
 
 # python 自带round精度问题，四舍五入不准确（_float输入浮点数, _len小数点位数）
+# Jeffrey - 可以采用Decimal模块直接实现
 def new_round(_float, _len):
     if isinstance(_float, float):
         if str(_float)[::-1].find('.') <= _len:
@@ -474,6 +480,7 @@ def new_round(_float, _len):
 # 鼠标移动提醒文本
 # https://blog.csdn.net/qq_46329012/article/details/115767178
 # 对该控件的定义
+# Jeffrey - 该函数没用？？
 class ToolTip(object):
 
     def __init__(self, widget):
@@ -519,6 +526,7 @@ def CreateToolTip(widget, text):
     widget.bind('<Leave>', leave)
 
 # 重设小数位
+# Jeffrey - 或者直接用 "{:.2f}".format(XXXXXX)
 def re_round(a):
     remain_amount = "%.2f" % a
     remain_amount_format =re.sub(r"(\d)(?=(\d\d\d)+(?!\d))", r"\1,", remain_amount)
@@ -768,7 +776,7 @@ def master_maintain():
     
     #  表示列,不显示,文本靠左，数字靠右
     for i in columns:
-#         print(i,ProductMaster[i].dtypes)
+    #         print(i,ProductMaster[i].dtypes)
         if ProductMaster[i].dtypes == float or ProductMaster[i].dtypes == int:
             treeview.column(i, width=95, anchor='center')
         else:
@@ -797,7 +805,7 @@ def master_maintain():
                     L[i] = (float(L[i][0].replace(',', '')),L[i][1])
         except:
             pass
-#         print(L)
+        #         print(L)
         L.sort(reverse=reverse)  # 排序方式
         
         # 根据排序后索引移动
@@ -842,12 +850,12 @@ def master_maintain():
                                 command=batch_material)
     btn_batch_material.place(x=700,y=30)
 
-    # 删除指定行code
-#     def del_material():
-#         pass
-#     btn_del_material = Button(frame,text="选中删除",bg="grey",font=("heiti",10),width=9,
-#                               height=1,borderwidth=5,command=del_material)
-#     btn_del_material.place(x=600,y=30)
+        # 删除指定行code
+    #     def del_material():
+    #         pass
+    #     btn_del_material = Button(frame,text="选中删除",bg="grey",font=("heiti",10),width=9,
+    #                               height=1,borderwidth=5,command=del_material)
+    #     btn_del_material.place(x=600,y=30)
     
     # 搜索code功能
     Label(frame,text="筛选字段：",bg='WhiteSmoke',font=("黑体",12)).place(x=0,y=35)
@@ -859,7 +867,7 @@ def master_maintain():
     entry_search = Entry(frame,font=("黑体",11),width=12) # 筛选内容
     entry_search.insert(0, "请输入信息")
     entry_search.place(x=190,y=37)
-#     CreateToolTip(entry_search, "请注意大小写输入！")
+    #     CreateToolTip(entry_search, "请注意大小写输入！")
     # 先清空表格，再插入数据，当字段选择为空、内容为空则显示全部
     def search_material():
         search_all = ProductMaster.copy()
@@ -879,12 +887,12 @@ def master_maintain():
                     search_df = search_df.append(search_all[search_all[
                         search_all.columns[i]].str.contains(search_content)])                
                 search_df.drop_duplicates(subset=["规格型号"], keep='first',inplace=True)
-#                 print(search_df)
+                #                 print(search_df)
             # 指定字段搜索
             else:
                 appoint = str(cbx.get())
                 search_df = search_all[search_all[appoint].str.contains(search_content)]
-#                 print(search_df)
+                #                 print(search_df)
             # 插入表格
             for i in range(len(search_df)):
                 if i % 2 == 0:
@@ -1409,7 +1417,7 @@ def forecast():
                  (abs(FCST['最终预测值']-miu)>abs(sigma)),'置信度'] = '较高'
         FCST.loc[(abs(FCST['最终预测值']-miu)<=abs(sigma)),'置信度'] = "高"
         FCST.loc[((np.mean(FCST.iloc[:,-8:-2],axis=1))<=abs(0.1)),'置信度'] = "高"
-#         print(round(FCST['FCST_Demand1']))
+        #         print(round(FCST['FCST_Demand1']))
         FCST.fillna(0,inplace=True)
         # 重新截取数据并排序
         FCST = FCST[["规格型号","分类Level4","模型预测值","最终预测值","修改原因","置信度",
@@ -1423,8 +1431,8 @@ def forecast():
                     FCST[i].iloc[j] = "{:,}".format(int(float(FCST[i].iloc[j])))
             except:
                 FCST[i] = FCST[i].astype(str)
-#         print(FCST)
-#         FCST.to_excel(r'FCST.xlsx')
+        #         print(FCST)
+        #         FCST.to_excel(r'FCST.xlsx')
 
 
         # ------------------主界面-------------------#
@@ -1458,7 +1466,7 @@ def forecast():
 
         # 表示列,不显示
         for i in range(len(FCST.columns)):
-#             print(str(FCST.columns[i]))
+        #             print(str(FCST.columns[i]))
             treeview.column(str(FCST.columns[i]), width=90, anchor='center') 
 
         # 显示表头
@@ -1520,12 +1528,12 @@ def forecast():
             modify_FCST.title('修改和记录')
             modify_FCST.geometry('500x300')
 
-#             # 输入值控制函数
-#             def entry_num():
-#                 if Entry_item.get().isdigit():
-#                     print("success")
-#                 else:
-#                     tkinter.messagebox.showerror("错误","请输入数字！")
+            #             # 输入值控制函数
+            #             def entry_num():
+            #                 if Entry_item.get().isdigit():
+            #                     print("success")
+            #                 else:
+            #                     tkinter.messagebox.showerror("错误","请输入数字！")
                     
             # 修改前后
             Label(modify_FCST,text="型号规格：").place(x=100,y=10)
@@ -1537,8 +1545,8 @@ def forecast():
             Label(modify_FCST,text="修改后：").place(x=100,y=90)
             Entry_item = Entry(modify_FCST,width=15)
             Entry_item.insert(0, item_text[3])
-#             Entry_item = Entry(modify_FCST,width=15,validate="focusout",
-#                                validatecommand=entry_num)
+            #             Entry_item = Entry(modify_FCST,width=15,validate="focusout",
+            #                                validatecommand=entry_num)
             Entry_item.place(x=180, y=90)
 
             Label(modify_FCST,text="修改原因：").place(x=100,y=130)
@@ -1553,7 +1561,7 @@ def forecast():
                 try:
                     Entry_item_num = float(Entry_item.get().replace(',', ''))
                     item_text = treeview.item(treeview.selection(), "values")
-#                     print(item_text,FCST.columns)
+                    #                     print(item_text,FCST.columns)
                     SQL_update_1 = "UPDATE AdjustFCSTDemand SET FCST_Demand1 = "+                     str(Entry_item_num)+" WHERE Material ='"+str(item_text[0])+                     "' AND JNJ_date = '"+str(FCST.columns[6])+"';" 
                     PrismDatabaseOperation.Prism_update(SQL_update_1)
                     # 将编辑好的数字信息更新到界面上
@@ -1629,12 +1637,12 @@ def forecast():
                         search_df = search_df.append(search_all[search_all[
                             search_all.columns[i]].str.contains(search_content)])                
                     search_df.drop_duplicates(subset=["规格型号"], keep='first',inplace=True)
-    #                 print(search_df)
+                    #                 print(search_df)
                 # 指定字段搜索
                 else:
                     appoint = str(cbx.get())
                     search_df = search_all[search_all[appoint].str.contains(search_content)]
-    #                 print(search_df)
+                    #                 print(search_df)
                 # 插入表格
                 for i in range(len(search_df)):
                     if i % 2 == 0:
@@ -2004,12 +2012,12 @@ def MapeBias():
                     search_df = search_df.append(search_all[search_all[
                         search_all.columns[i]].str.contains(search_content)])                
                 search_df.drop_duplicates(subset=["规格型号"], keep='first',inplace=True)
-#                 print(search_df)
+                #                 print(search_df)
             # 指定字段搜索
             else:
                 appoint = str(cbx.get())
                 search_df = search_all[search_all[appoint].str.contains(search_content)]
-#                 print(search_df)
+                #                 print(search_df)
             # 插入表格
             for i in range(len(search_df)):
                 if i % 2 == 0:
