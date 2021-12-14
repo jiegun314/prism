@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import time
+# import time
 from tkinter.filedialog import * # 不提前引用会导致第一次运行失败？
 from tkinter import *
 from tkinter import ttk
@@ -12,14 +12,14 @@ import sqlite3
 # 系统设计所需库
 # from tkinter.filedialog import *
 import tkinter.messagebox
-import ctypes
+# import ctypes
 from ctypes import windll
 from PIL import Image, ImageTk
 from sqlalchemy import create_engine
 
     
-from PIL import Image, ImageTk
-import xlwt
+# from PIL import Image, ImageTk
+# import xlwt
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pylab import mpl
@@ -31,21 +31,21 @@ plt.rcParams['axes.unicode_minus'] = False
 
 
 # 系统逻辑所需库
-import re
-import xlrd
+# import re
+# import xlrd
 import pandas as pd
 import numpy as np
-import pyodbc
+# import pyodbc
 import os
 import datetime
 from dateutil.relativedelta import relativedelta
 import math
-import pymssql
+# import pymssql
 # pymssql依赖包缺失
-from pymssql import _mssql
-from pymssql import _pymssql
-import uuid
-import decimal
+# from pymssql import _mssql
+# from pymssql import _pymssql
+# import uuid
+# import decimal
 
 # for i in range(50,100):
 #     # 每次更新加1
@@ -63,24 +63,27 @@ warnings.filterwarnings('ignore')
 
 # Jeffrey - 添加其他文件中的python
 from prism_database_operation import PrismDatabaseOperation
+from prism_business_operation import PrismCalculation
 
 
 # Master表信息维护
 class MasterData:
     # 查询code数据
-    def master_search():
-        SQL_SELECT = "SELECT Material FROM ProductMaster"
-        material = PrismDatabaseOperation.Prism_select(SQL_SELECT).values
-        return material
+    # 没用？
+    # def master_search():
+    #     SQL_SELECT = "SELECT Material FROM ProductMaster"
+    #     material = PrismDatabaseOperation.Prism_select(SQL_SELECT).values
+    #     return material
     
     # 主数据校验,校验是否存在，若否，则返回相应code
-    def master_check(df):
-        master_code = pd.DataFrame(columns=['Material'],data=MasterData.master_search())
-        lack_code = df[~df['Material'].isin(master_code['Material'])]['Material']
-        if lack_code.empty:
-            return 0
-        else:
-            return lack_code
+    # Jeffrey - 没用？？
+    # def master_check(df):
+    #     master_code = pd.DataFrame(columns=['Material'],data=MasterData.master_search())
+    #     lack_code = df[~df['Material'].isin(master_code['Material'])]['Material']
+    #     if lack_code.empty:
+    #         return 0
+    #     else:
+    #         return lack_code
 
     # 修改数据（数据校验修改前后是否存在重复）
     def master_update(item_text):
@@ -111,7 +114,7 @@ class MasterData:
                 item_text = modify_treeview.item(item, "values")
 
             column = modify_treeview.identify_column(event.x)# 所在列
-            row = modify_treeview.identify_row(event.y)# 所在行，返回
+            # row = modify_treeview.identify_row(event.y)# 所在行，返回
             cn = int(str(column).replace('#',''))
             #             rn = int(str(row).replace('I',''))
             #             print(row,rn,column,cn)
@@ -302,7 +305,7 @@ class MasterData:
             a = list()
             for i in t:
                 a.append(list(modify_treeview.item(i,'values')))
-            column = list(PrismDatabaseOperation.Prism_select('SELECT TOP 1 * FROM ProductMaster').columns)
+            column = list(PrismDatabaseOperation.Prism_select('SELECT * FROM ProductMaster LIMIT 1').columns)
             df_now = pd.DataFrame(a,columns=column)
             for i in ["GTS","包装规格","MOQ","安全库存天数"]:
                 df_now[i] = df_now[i].astype(float)
@@ -338,100 +341,62 @@ class PrismDatabaseOperation:
     """
     
     # 查询
-    def Prism_select(SQL, df=""):
+    def Prism_select(sql_cmd) -> pd.DataFrame:
         try:
-            # 定义数据库参数
-            server = "localhost"          # 服务器名称
-            user = "ryan"                 # 用户名
-            password = "prism123+"        # 链接密码
-            database = "Prism"            # 数据库名
-            charset = "cp936"               # charset编码规则中文
-            try:
-                # 连接数据库
-                #-- coding: utf-8 --
-                # conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
-                #                       ';DATABASE='+database+';UID='+user+';PWD='+password)
-                # conn = pymssql.connect(server=server, user=user, password=password, database=database)
-                conn = sqlite3.connect('prism_data.db')
-                cursor = conn.cursor() # 句柄
-            except:
-                tkinter.messagebox.showerror("错误","连接数据库失败！")
-            # 单次查询指定sql
-            if df == "":
-                cursor.execute(SQL) # 执行语句
-                data = cursor.fetchall()
-                columnDes = cursor.description #获取连接对象的描述信息
-                columnNames = [columnDes[i][0] for i in range(len(columnDes))]
-                df = pd.DataFrame([list(i) for i in data],columns=columnNames)
-                cursor.close() # 关闭句柄
-                return df
+            conn = sqlite3.connect('prism_data.db')
+        except:
+            tkinter.messagebox.showerror("错误","连接数据库失败！")
+        try:
+            df_data = pd.read_sql(con=conn, sql=sql_cmd, index_col=None)
+            return df_data
         except:
             tkinter.messagebox.showerror("错误","数据查询失败！")
 
     # 修改
-    def Prism_update(SQL, df=""):
+    def Prism_update(sql_cmd):
         try:
-            # 定义数据库参数
-            server = "localhost"          # 服务器名称
-            user = "ryan"                 # 用户名
-            password = "prism123+"        # 链接密码
-            database = "Prism"            # 数据库名
-            charset = "gbk"               # charset编码规则中文
-            try:
-                # 连接数据库
-                # conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
-                #                       ';DATABASE='+database+';UID='+user+';PWD='+password)
-                conn = sqlite3.connect('prism_data.db')
-                cursor = conn.cursor() # 句柄
-                
-            except:
-                tkinter.messagebox.showerror("错误","连接数据库失败！")
-                
-            cursor.execute(SQL)
+            conn = sqlite3.connect('prism_data.db')
+            cursor = conn.cursor() # 句柄
+            
+        except:
+            tkinter.messagebox.showerror("错误","连接数据库失败！")
+        try:  
+            cursor.execute(sql_cmd)
             cursor.commit()
             cursor.close() # 关闭句柄
         except:
             tkinter.messagebox.showerror("错误","数据更新失败！")
 
     # 删除
-    def Prism_delete(SQL, df=""):
+    def Prism_delete(sql_cmd):
         try:
-            # 定义数据库参数
-            server = "localhost"          # 服务器名称
-            user = "ryan"                 # 用户名
-            password = "prism123+"        # 链接密码
-            database = "Prism"            # 数据库名
-            charset = "gbk"               # charset编码规则中文
-            try:
-                # 连接数据库
-                # conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+
-                #                       ';DATABASE='+database+';UID='+user+';PWD='+password)
-                conn = sqlite3.connect('prism_data.db')
-                cursor = conn.cursor() # 句柄
-            except:
-                tkinter.messagebox.showerror("错误","连接数据库失败！")
-            cursor.execute(SQL)
+            conn = sqlite3.connect('prism_data.db')
+            cursor = conn.cursor() # 句柄
+            
+        except:
+            tkinter.messagebox.showerror("错误","连接数据库失败！")
+        try:  
+            cursor.execute(sql_cmd)
             cursor.commit()
             cursor.close() # 关闭句柄
         except:
-            tkinter.messagebox.showerror("错误","数据删除失败！")
+            tkinter.messagebox.showerror("错误","数据更新失败！")
 
     # 增加,特殊方法，直接附加df,如有null，替换为0
-    def Prism_insert(db_sheetname, df=""):
+    def Prism_insert(db_sheetname, df_input):
         try:
-            try:
-                #  定义数据库参数,连接数据库
-                # conn = create_engine('mssql+pymssql://ryan:prism123+@localhost/Prism')
-                conn = sqlite3.connect('prism_data.db')
-            except:
-                tkinter.messagebox.showerror("错误","连接数据库失败！")
+            #  定义数据库参数,连接数据库
+            conn = sqlite3.connect('prism_data.db')
+        except:
+            tkinter.messagebox.showerror("错误", "连接数据库失败！")
+        try:
             # 附加df
-            df.to_sql(db_sheetname, con=conn, if_exists='append', index=False)
+            df_input.to_sql(db_sheetname, con=conn, if_exists='append', index=False)
             conn.dispose() # 关闭链接
             return "right"
-#             tkinter.messagebox.showinfo("提示",db_sheetname+"数据插入成功！")
+            #             tkinter.messagebox.showinfo("提示",db_sheetname+"数据插入成功！")
         except:
-            tkinter.messagebox.showerror("错误",db_sheetname+"数据插入失败！")
+            tkinter.messagebox.showerror("错误", "%s数据插入失败！" % db_sheetname)
             return "error"
 
 
@@ -439,13 +404,13 @@ class PrismDatabaseOperation:
 
 # 主界面文本风格设置
 # Jeffrey - 该函数没用？？
-def s_2():
-    place_x = 0
-    place_y = 0
-    font = ('黑体',16)
-    bg='WhiteSmoke'
-    fg='DimGray'
-    return place_x,place_y,font,bg,fg
+# def s_2():
+#     place_x = 0
+#     place_y = 0
+#     font = ('黑体',16)
+#     bg='WhiteSmoke'
+#     fg='DimGray'
+#     return place_x,place_y,font,bg,fg
 
 # 返回前N月的JNJ_Month
 # Jeffrey - 是否确保按照JNJ_Date排序
@@ -458,17 +423,17 @@ def JNJ_Month(n):
 
 # df含千分位字符转数字
 # Jeffrey - 该函数没用？
-def convert(item):
-    if isinstance(item, str):
-        if ',' not in item: 
-            return float(item)
-        s = ''
-        tmp = item.strip().split(',')
-        for i in range(len(tmp)):
-            s += tmp[i]
-        return float(s)
-    else:
-        return 'Type transformed'
+# def convert(item):
+#     if isinstance(item, str):
+#         if ',' not in item: 
+#             return float(item)
+#         s = ''
+#         tmp = item.strip().split(',')
+#         for i in range(len(tmp)):
+#             s += tmp[i]
+#         return float(s)
+#     else:
+#         return 'Type transformed'
 
 # python 自带round精度问题，四舍五入不准确（_float输入浮点数, _len小数点位数）
 # Jeffrey - 可以采用Decimal模块直接实现
@@ -484,9 +449,7 @@ def new_round(_float, _len):
         return(round(_float, _len))
 
 # 鼠标移动提醒文本
-# https://blog.csdn.net/qq_46329012/article/details/115767178
 # 对该控件的定义
-# Jeffrey - 该函数没用？？
 class ToolTip(object):
 
     def __init__(self, widget):
@@ -534,9 +497,11 @@ def CreateToolTip(widget, text):
 # 重设小数位
 # Jeffrey - 或者直接用 "{:.2f}".format(XXXXXX)
 def re_round(a):
-    remain_amount = "%.2f" % a
-    remain_amount_format =re.sub(r"(\d)(?=(\d\d\d)+(?!\d))", r"\1,", remain_amount)
-    return remain_amount_format
+    # remain_amount = "%.2f" % a
+    # remain_amount_format =re.sub(r"(\d)(?=(\d\d\d)+(?!\d))", r"\1,", remain_amount)
+    # return remain_amount_format
+    return "{:,.2f}".format(a)
+
 # 右键菜单
 # def cut(editor, event=None):
 #     editor.event_generate("<<Cut>>")
@@ -1151,24 +1116,24 @@ def read_dir():
     
     # 判断是否存在错误数据和缺失数据，显示到主界面
     ft = ("华文中宋",12)
-#     Label()
+    #     Label()
     if error_input == [] and lack_input == []:
         # 判断是否已导入
         if already_input == []:
             Label(window,width=82,height=6,font=ft,justify="left",wraplength=800,anchor="nw",
                    bg="white",text="数据全部导入成功").place(x=360,y=280)
-#             tkinter.messagebox.showinfo("提示","数据全部导入成功")
+                    #             tkinter.messagebox.showinfo("提示","数据全部导入成功")
         else:
             Label(window,width=82,height=6,font=ft,justify="left",wraplength=800,anchor="nw",
                    bg="white",text="请注意:\n"+str(already_input)+"已存在数据库！"
                  ).place(x=360,y=280)
-#             tkinter.messagebox.showinfo("提示",str(already_input)+"已存在数据库！")
+                #             tkinter.messagebox.showinfo("提示",str(already_input)+"已存在数据库！")
     else:
         Label(window,width=82,height=6,font=ft,justify="left",wraplength=800,anchor="nw",
               bg="white",text="请注意:\n"+str(error_input)+"导入失败！\n"+str(lack_input)+
               "文件或数据缺失！").place(x=360,y=280)
-#         tkinter.messagebox.showinfo("警告","请注意\n"+str(error_input)+"导入失败！\n"
-#                                      +str(lack_input)+"文件或数据缺失！")
+        #         tkinter.messagebox.showinfo("警告","请注意\n"+str(error_input)+"导入失败！\n"
+        #                                      +str(lack_input)+"文件或数据缺失！")
     # 各个数据进行merge
     merge_O_B = pd.merge(Outbound.loc[:,['JNJ_Date','Material','Outbound_QTY']],
                          Backorder,
@@ -1184,7 +1149,7 @@ def read_dir():
                                how='outer')
     merge_all = merge_O_B_P_O_I[['JNJ_Date','Material','Outbound_QTY','Backorder_QTY',
                                 'Putaway_QTY','Onhand_QTY','Intransit_QTY']]
-#     merge_all.to_excel(r"merge_all.xlsx",index=False)
+    #     merge_all.to_excel(r"merge_all.xlsx",index=False)
     merge_all.fillna(0,inplace=True)
     try:
         # 删除合计行
@@ -1197,17 +1162,17 @@ def read_dir():
         pass
     merge_all['预测状态']='MTS'
     
-#     merge_all.to_excel(r"merge_all.xlsx",index=False)
+    #     merge_all.to_excel(r"merge_all.xlsx",index=False)
     # 获取当前Product Master
     ProductMaster = PrismDatabaseOperation.Prism_select('SELECT * FROM ProductMaster')
     # 合并
     merge_lack = pd.merge(ProductMaster,merge_all, on='Material',how='outer')
-#     merge_lack.to_excel(r"merge_lack.xlsx",index=False)
-#     to_open = merge_lack[merge_lack['预测状态']=='MTS'][merge_lack['FCST_state']=='关']
+    #     merge_lack.to_excel(r"merge_lack.xlsx",index=False)
+    #     to_open = merge_lack[merge_lack['预测状态']=='MTS'][merge_lack['FCST_state']=='关']
     to_add = merge_lack[merge_lack['预测状态']=='MTS'][merge_lack['FCST_state'].isnull()]
-#     print(to_open)
-#     print(to_add)
-#     to_updata = to_open.append(to_add)
+    #     print(to_open)
+    #     print(to_add)
+    #     to_updata = to_open.append(to_add)
     to_updata = to_add.copy()
     to_updata = to_updata[list(ProductMaster.columns)]
     to_updata.rename(columns={'Material':'规格型号','GTS':'不含税单价','FCST_state':'预测状态'},
@@ -1228,217 +1193,8 @@ def forecast():
     
     # 计算预测模型值，并将计算出来的预测及预测之后3月数据显示到主窗口上
     def acl_FCSTModel():
-        # 读取当月缺货、销售出库、季节因子数据，并且进行合并和计算，并导入相应的数据库表
-        last_month = JNJ_Month(1)[0]
-        Outbound = PrismDatabaseOperation.Prism_select("SELECT * FROM Outbound WHERE JNJ_Date='"+last_month+"';")
-        Backorder = PrismDatabaseOperation.Prism_select("SELECT * FROM Backorder WHERE JNJ_Date='"+
-                                          last_month+"';")
-        B_O = pd.merge(Outbound,Backorder,how="outer",on=['Material','JNJ_Date'])
-        SeasonFactor = PrismDatabaseOperation.Prism_select("SELECT * FROM SeasonFactor;")
-        ActDemand = pd.merge(B_O,SeasonFactor,how="left",on=['JNJ_Date'])
-        ActDemand['Backorder_QTY'].fillna(0,inplace=True)
-        ActDemand['Outbound_QTY'].fillna(0,inplace=True)
-        ActDemand['ActDemand_QTY'] = (ActDemand['Outbound_QTY']+
-                                      ActDemand['Backorder_QTY'])/ActDemand['season_factor']
-        ActDemand = ActDemand[['JNJ_Date','Material','ActDemand_QTY']]
-        # 插入之前判断是否已有数据
-        ActDemand_db = PrismDatabaseOperation.Prism_select("SELECT * FROM ActDemand WHERE JNJ_Date='"+
-                                             last_month+"';")
-        #         ActDemand.to_excel(r"ActDemand.xlsx")
-        missing = []
-        if ActDemand_db.empty:
-            PrismDatabaseOperation.Prism_insert('ActDemand',ActDemand)
-        else:
-            ActDemand = ActDemand_db
-            missing.append("模型数据")
-        #             tkinter.messagebox.showinfo("提示","模型数据已存在！")
-
-        month_12 = JNJ_Month(12)
-        FCSTmodel = pd.DataFrame()
-        for i in range(12):
-            SQL_select = "SELECT * FROM ActDemand WHERE JNJ_Date='"+month_12[i]+"';"
-            FCSTmodel = FCSTmodel.append(PrismDatabaseOperation.Prism_select(SQL_select))
-
-        # 获取所有FCST_state为开的ProductMaster数据
-        SQL_state = "SELECT Material,分类Level4 FROM ProductMaster WHERE FCST_state = 'MTS'"
-        state_MTS  = PrismDatabaseOperation.Prism_select(SQL_state)
-
-        # 链接数据，得到所需的计算12个月的数据
-        acl_FCSTDemand = pd.merge(state_MTS,FCSTmodel,how="outer",on=['Material'])
-        acl_FCSTDemand.fillna(0,inplace=True)
-        #         print(acl_FCSTDemand)
-
-        # 获取权值
-        FCSTWeight = PrismDatabaseOperation.Prism_select("SELECT * FROM FCSTWeight")
-        w1 = FCSTWeight['值'].iloc[0]
-        w2 = FCSTWeight['值'].iloc[1]
-        w3 = FCSTWeight['值'].iloc[2]
-
-        # 数透，material为行，JNJ_Date为列
-        acl_FCSTDemand_12 = acl_FCSTDemand.pivot_table(index='Material',columns='JNJ_Date')
-        acl_FCSTDemand_12.fillna(0,inplace=True)
-
-        # 换列名，方便直接取出相应月份的数据
-        acl_FCSTDemand_12_col = []
-        for i in range(len(acl_FCSTDemand_12.columns)):
-            if type(acl_FCSTDemand_12.columns.values[i][1]) == str :
-                 acl_FCSTDemand_12_col.append(acl_FCSTDemand_12.columns.values[i][1])
-            else:
-                acl_FCSTDemand_12_col.append(str(acl_FCSTDemand_12.columns.values[i][1]))
-        #         print(acl_FCSTDemand_12_col)
-        acl_FCSTDemand_12.columns = acl_FCSTDemand_12_col
-        try:
-            del acl_FCSTDemand_12["0"] # 当master里有而需求中没有就会出现不必要的0列，删除即可
-        except:
-            pass
-
-        # 循环计算3次，以预测值预测后三月内容，nice！
-        for i in range(3):
-            # 获取相应月数据，并计算相应结果列
-            model_3 = acl_FCSTDemand_12[acl_FCSTDemand_12.columns[-3:]]
-            acl_model_3 = model_3[list(model_3.columns)[0]] # 求和3月值
-            for i in range(1,len(model_3.columns)):
-                acl_model_3 = acl_model_3 + model_3[list(model_3.columns)[i]]
-            acl_model_3 = acl_model_3/3*w1
-
-            model_6 = acl_FCSTDemand_12[acl_FCSTDemand_12.columns[-6:]]
-            acl_model_6 = model_6[list(model_6.columns)[0]] # 求和6月值
-            for i in range(1,len(model_6.columns)):
-                acl_model_6 = acl_model_6 + model_6[list(model_6.columns)[i]]
-            acl_model_6 = acl_model_6/6*w2
-
-            model_12 = acl_FCSTDemand_12[acl_FCSTDemand_12.columns[-12:]]
-            acl_model_12 = model_12[list(model_12.columns)[0]] # 求和12月值
-            for i in range(1,len(model_12.columns)):
-                acl_model_12 = acl_model_12 + model_12[list(model_12.columns)[i]]
-            acl_model_12 = acl_model_12/12*w3
-            FCSTModel_QTY = acl_model_3+acl_model_6+acl_model_12
-
-            # 获取计算月的后一个月
-            month_after_1 = datetime.datetime.strptime(acl_FCSTDemand_12.columns[-1],
-                                                       '%Y%m')+relativedelta(months=+1)
-            month_after_1 = month_after_1.strftime('%Y%m')
-            # 将计算出来的最新一个月数据赋值给12月的计算数据
-            acl_FCSTDemand_12[month_after_1] = FCSTModel_QTY
-
-        # 取出预测的3个值，并排好列序，以防插入数据库时失败
-        FCST_Demand = acl_FCSTDemand_12.iloc[:,-3:].reset_index() # 将数透格式转为df
-        FCST_Demand.columns = ['Material','FCST_Demand1','FCST_Demand2','FCST_Demand3']
-        FCST_Demand['JNJ_Date'] = len(FCST_Demand)*JNJ_Month(1)
-
-        # 前面除过的季节因子，现在乘回来，需获取当月的JNJ_Date并获取后三个月的季节因子
-        try:
-            SeasonFactor = PrismDatabaseOperation.Prism_select("SELECT * FROM SeasonFactor")
-            months_1 = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
-                        relativedelta(months=1)).strftime("%Y%m")
-            months_2 = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
-                        relativedelta(months=2)).strftime("%Y%m")
-            months_3 = (datetime.datetime.strptime(JNJ_Month(1)[0],"%Y%m")+
-                        relativedelta(months=3)).strftime("%Y%m")
-            SeasonFactor_1 = SeasonFactor[SeasonFactor['JNJ_Date']==months_1
-                                         ]['season_factor'].iloc[0]
-            SeasonFactor_2 = SeasonFactor[SeasonFactor['JNJ_Date']==months_2
-                                         ]['season_factor'].iloc[0]
-            SeasonFactor_3 = SeasonFactor[SeasonFactor['JNJ_Date']==months_3
-                                         ]['season_factor'].iloc[0]
-        except:
-            tkinter.messagebox.showerror("错误","季节因子不存在，请维护季节因子数据")
-
-        #         print(FCST_Demand[FCST_Demand['Material']=='W9932'])
-        FCST_Demand['FCST_Demand1'] = FCST_Demand['FCST_Demand1']*SeasonFactor_1
-        FCST_Demand['FCST_Demand2'] = FCST_Demand['FCST_Demand2']*SeasonFactor_2
-        FCST_Demand['FCST_Demand3'] = FCST_Demand['FCST_Demand3']*SeasonFactor_3
-        #         FCST_Demand.to_excel(r"FCST_Demand.xlsx")
-        FCSTDemand = FCST_Demand[['JNJ_Date','Material','FCST_Demand1','FCST_Demand2',
-                                  'FCST_Demand3']]
-        FCSTDemand.fillna(0,inplace=True)
-        # 全部取整
-        FCSTDemand['FCST_Demand1'] = new_round(FCSTDemand['FCST_Demand1'],0)
-        FCSTDemand['FCST_Demand2'] = new_round(FCSTDemand['FCST_Demand2'],0)
-        FCSTDemand['FCST_Demand3'] = new_round(FCSTDemand['FCST_Demand3'],0)
-
-        # 判断数据库中是否已存在，将计算出来的数值插入到数据库中
-        SQL_select = "SELECT JNJ_Date FROM FCSTDemand"
-        FCST_Demand_Date = PrismDatabaseOperation.Prism_select(SQL_select)['JNJ_Date']
-        if JNJ_Month(1) not in FCST_Demand_Date.unique() or FCST_Demand_Date.empty:
-            PrismDatabaseOperation.Prism_insert('FCSTDemand',FCSTDemand)
-        else:
-            SQL = "SELECT * FROM FCSTDemand WHERE JNJ_Date ='"+JNJ_Month(1)[0]+"';"
-            FCSTDemand = PrismDatabaseOperation.Prism_select(SQL)
-            missing.append("预测数据")
-        #             tkinter.messagebox.showinfo("提示",JNJ_Month(1)[0]+"预测数据已存在！")
-
-        # 断数据库中是否已存在，将FCST_Demand1存入预测需求调整表格中
-        AdjustFCSTDemand = FCSTDemand[['JNJ_Date','Material','FCST_Demand1']]
-        AdjustFCSTDemand["Remark"] = ""
-        SQL_select = "SELECT JNJ_Date FROM AdjustFCSTDemand"
-        Adjust_FCST_Demand_Date = PrismDatabaseOperation.Prism_select(SQL_select)['JNJ_Date']
-        if JNJ_Month(1)  not in Adjust_FCST_Demand_Date.unique() or Adjust_FCST_Demand_Date.empty:
-            PrismDatabaseOperation.Prism_insert('AdjustFCSTDemand',AdjustFCSTDemand)
-        else:
-            SQL = "SELECT * FROM AdjustFCSTDemand WHERE JNJ_Date ='"+JNJ_Month(1)[0]+"';"
-            AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL)
-            missing.append("已调整预测需求")
-        #             tkinter.messagebox.showinfo("提示",JNJ_Month(1)[0]+"已调整预测需求已存在")        
-
-        # 如果missing已存在，则提示哪些已存在
-        if missing != []:
-            tkinter.messagebox.showinfo("提示",str(missing)+"已存在!")
-
-        # 将预测结果显示到主窗口，规格型号、产品家族、出库记录（6个月）、置信度（6个月数据，千分位）
-        SQL_select = "SELECT [Material],[分类Level4] FROM ProductMaster WHERE FCST_state = 'MTS'"
-        ProductMaster = PrismDatabaseOperation.Prism_select(SQL_select)
-
-        # 获取出库记录（6个月）
-        Outbound_QTY = pd.DataFrame()
-        for i in range(6):
-            SQL_select_outbound = "SELECT * FROM Outbound WHERE JNJ_Date = '"+             JNJ_Month(6)[i]+"';"
-            Outbound_QTY = Outbound_QTY.append(PrismDatabaseOperation.Prism_select(SQL_select_outbound))
-        Outbound_QTY = Outbound_QTY.pivot_table(index='Material',columns="JNJ_Date")
-        Outbound_QTY_col = [] # 换列名，方便直接取出相应月份的数据
-        for i in range(6):
-            Outbound_QTY_col.append(Outbound_QTY.columns.values[i][1])
-        Outbound_QTY.columns = Outbound_QTY_col
-        Outbound_QTY = Outbound_QTY.reset_index() # 重置index
-
-        # 合并并计算置信度
-        P_O = pd.merge(ProductMaster,Outbound_QTY,how='left',on="Material")
-        P_O_A = pd.merge(P_O,FCSTDemand,how='left',on="Material")
-        FCST = pd.merge(P_O_A,AdjustFCSTDemand,how='left',on="Material")
-        del FCST['JNJ_Date_x'],FCST['JNJ_Date_y']
-        miu = np.mean(FCST[[JNJ_Month(6)[0],JNJ_Month(6)[1],JNJ_Month(6)[2],
-                            JNJ_Month(6)[3],JNJ_Month(6)[4],JNJ_Month(6)[5]]].iloc[:],axis=1)
-        sigma = np.std(FCST[[JNJ_Month(6)[0],JNJ_Month(6)[1],JNJ_Month(6)[2],
-                             JNJ_Month(6)[3],JNJ_Month(6)[4],JNJ_Month(6)[5]]].iloc[:],axis=1)
-        FCST.rename(columns={'Material':'规格型号','FCST_Demand1_x':'模型预测值',
-                             'FCST_Demand1_y':'最终预测值','Remark':'修改原因'},
-                    inplace=True)
-        # # 历史数据为0，置信度应该为高
-        # # 根据出库记录，计算置信度，按可信程度区分，切片替换,|x-μ|的距离判断即可
-        FCST['置信度'] = ""
-        FCST.loc[(abs(FCST['最终预测值']-miu)>abs(3*sigma)),'置信度'] = '低'
-        FCST.loc[(abs(FCST['最终预测值']-miu)<=abs(3*sigma)) & 
-                 (abs(FCST['最终预测值']-miu)>abs(2*sigma)),'置信度'] = '较低'
-        FCST.loc[(abs(FCST['最终预测值']-miu)<=abs(2*sigma)) & 
-                 (abs(FCST['最终预测值']-miu)>abs(sigma)),'置信度'] = '较高'
-        FCST.loc[(abs(FCST['最终预测值']-miu)<=abs(sigma)),'置信度'] = "高"
-        FCST.loc[((np.mean(FCST.iloc[:,-8:-2],axis=1))<=abs(0.1)),'置信度'] = "高"
-        #         print(round(FCST['FCST_Demand1']))
-        FCST.fillna(0,inplace=True)
-        # 重新截取数据并排序
-        FCST = FCST[["规格型号","分类Level4","模型预测值","最终预测值","修改原因","置信度",
-                     FCST.columns[7],FCST.columns[6],FCST.columns[5],
-                     FCST.columns[4],FCST.columns[3],FCST.columns[2]]]
-        
-        # 转换格式
-        for i in FCST.columns:
-            try:
-                for j in range(len(FCST)):
-                    FCST[i].iloc[j] = "{:,}".format(int(float(FCST[i].iloc[j])))
-            except:
-                FCST[i] = FCST[i].astype(str)
-        #         print(FCST)
-        #         FCST.to_excel(r'FCST.xlsx')
+        prism_calcultion = PrismCalculation()
+        FCST = prism_calcultion.forecast_generation()
 
 
         # ------------------主界面-------------------#
@@ -2339,16 +2095,16 @@ def MapeBias():
                             bg='slategrey',fg='white',borderwidth=5,command=output_plan)
         btn_output.place(relx=0.93,rely=0.05)
 
-#         # 搜索功能
-#         Label(review,text="筛选字段：",bg='WhiteSmoke',font=("黑体",12)).place(relx=0.66,rely=0.06)
-#         cbx = ttk.Combobox(review,font=("黑体",11),width=10) #筛选字段
-#         comvalue = tkinter.StringVar()
-#         cbx["values"] = ["全局搜索"] + columns
-#         cbx.current(1)
-#         cbx.place(relx=0.72,rely=0.06)
-#         entry_search = Entry(review,font=("黑体",11),width=12) # 筛选内容
-#         entry_search.insert(0, "请输入信息")
-#         entry_search.place(relx=0.8,rely=0.06)
+        #         # 搜索功能
+        #         Label(review,text="筛选字段：",bg='WhiteSmoke',font=("黑体",12)).place(relx=0.66,rely=0.06)
+        #         cbx = ttk.Combobox(review,font=("黑体",11),width=10) #筛选字段
+        #         comvalue = tkinter.StringVar()
+        #         cbx["values"] = ["全局搜索"] + columns
+        #         cbx.current(1)
+        #         cbx.place(relx=0.72,rely=0.06)
+        #         entry_search = Entry(review,font=("黑体",11),width=12) # 筛选内容
+        #         entry_search.insert(0, "请输入信息")
+        #         entry_search.place(relx=0.8,rely=0.06)
 
         # 先清空表格，再插入数据，当字段选择为空、内容为空则显示全部
         def search_material():
@@ -2364,7 +2120,7 @@ def MapeBias():
                 treeview.delete(item)
             # 查找并插入数据
             if entry_search.get() != "":
-#                 search_content = str(entry_search.get())
+            #                 search_content = str(entry_search.get())
                 search_content = str(entry_find.get())
                 # 全局搜索
                 if cbx.get() == "全局搜索":
@@ -2396,10 +2152,10 @@ def MapeBias():
                         tag = "oddrow"
                     treeview.insert('', i, values=list(search_all.iloc[i,:]),tags=tag)
 
-#         btn_search_material = Button(review,text="查找",font=("黑体",10,'bold'),bg='slategrey',
-#                                      fg='white',width=9,height=1,borderwidth=5,
-#                                      command=search_material)
-#         btn_search_material.place(relx=0.87,rely=0.05) 
+        #         btn_search_material = Button(review,text="查找",font=("黑体",10,'bold'),bg='slategrey',
+        #                                      fg='white',width=9,height=1,borderwidth=5,
+        #                                      command=search_material)
+        #         btn_search_material.place(relx=0.87,rely=0.05) 
 
         review.mainloop()
         
@@ -2480,8 +2236,8 @@ def Replenishment():
         if SafetyStockDay.empty:
             lack.append("安全库存天数")
         
-#         if lack != []:
-#             tkinter.messagebox.showwarning("警告",str(lack)+"数据缺失!")
+        #         if lack != []:
+        #             tkinter.messagebox.showwarning("警告",str(lack)+"数据缺失!")
 
         # 合并所需信息
         merge1 = pd.merge(AdjustFCSTDemand,Intransit,how="outer",on="Material")
@@ -2682,10 +2438,10 @@ def Replenishment():
         treeview.place(x=0,y=100,relwidth=0.98)
 
         # 表示列,不显示
-#         treeview.column(str(rep_result.columns[0]), width=80, anchor='center')
+        #         treeview.column(str(rep_result.columns[0]), width=80, anchor='center')
         
         for i in range(0,len(rep_result.columns)):
-#             print(str(FCST.columns[i]))
+        #             print(str(FCST.columns[i]))
             treeview.column(str(rep_result.columns[i]), width=100, anchor='center') 
 
         # 显示表头
@@ -2773,7 +2529,7 @@ def Replenishment():
             # 改变千分位字符为数字
             Rep_plan['RepWeek_QTY'] = Rep_plan.loc[:,'RepWeek_QTY'].apply(
                 lambda x: float(x.replace(",", "")))
-    #         print(Rep_plan)
+            #         print(Rep_plan)
             # 判断当前数据库中的月份
         
             if next_month in list(PrismDatabaseOperation.Prism_select("SELECT JNJ_Date FROM RepPlan")['JNJ_Date']):
@@ -3004,7 +2760,7 @@ def Replenishment():
                 a.append(list(modify_treeview.item(i,'values')))
             df_now = pd.DataFrame(a,columns=columns)
             PrismDatabaseOperation.Prism_insert('SafetyStockDay',df_now)
-#             modify_SafetyStockDay.destroy()
+    #             modify_SafetyStockDay.destroy()
             # 再次计算,更新金额,覆盖界面
             acl_rep()
 
@@ -3217,8 +2973,8 @@ def modify_Replenishment():
         AdjustRepPlan = AdjustRepPlan[AdjustRepPlan["week_No"]=="W1"]
         AdjustRepPlan = AdjustRepPlan[["Material","W1","W2","W3","W4","Rep_Remark"]]
 
-#         if lack != []:
-#             tkinter.messagebox.showwarning("警告",str(lack)+"数据缺失!")
+    #         if lack != []:
+    #             tkinter.messagebox.showwarning("警告",str(lack)+"数据缺失!")
 
         # 合并所需信息
         merge1 = pd.merge(AdjustFCSTDemand,Intransit,how="outer",on="Material")
@@ -3441,7 +3197,7 @@ def modify_Replenishment():
         btn_output = Button(frame,text="下载补货计划",font=('黑体',10,'bold'),width=15,height=1,
                             bg='slategrey',fg='white',borderwidth=5,
                             command=output_plan)
-#         CreateToolTip(btn_output,"请确认已保存再下载！")
+    #         CreateToolTip(btn_output,"请确认已保存再下载！")
         btn_output.place(x=520,y=50)
         
         # 搜索功能
@@ -3552,7 +3308,7 @@ def modify_Replenishment():
                 Label_select.place(x=150, y=100)
                 # 将编辑好的信息更新到数据库中
                 def save_edit():
-#                     print(item)
+    #                     print(item)
                     if cn in [5,6,7,8]:
                         entry_value = int(entryedit.get().replace(",",""))
                         modify_treeview.set(item, column=column,value="{:,}".format(entry_value)) 
@@ -3659,7 +3415,7 @@ def modify_Replenishment():
                                       font=('黑体',15),width=15,height=2,fg='red',bg='WhiteSmoke')
                     lb_amount.place(x=820,y=46)
                 tkinter.messagebox.showinfo("提示","成功！")
-#                 read_adjust_db() # 最慢最全的更新办法                
+    #                 read_adjust_db() # 最慢最全的更新办法                
                 plan.destroy()
 
             Button(plan,text="确认修改",font=("黑体",12,'bold'),bg='slategrey',fg='white',width=9,
@@ -3962,9 +3718,9 @@ def Access_tracking():
         merge_all["Rep_plan_value"] = merge_all["GTS"]*merge_all["RepWeek_QTY"]
         # 删除week_No为0的情况
         merge_all.drop(index=merge_all[merge_all["week_No"]==0].index,inplace=True) 
-#         merge_all.to_excel(r'merge_all.xlsx',index=False)
-#         # 去重复
-#         merge_all.drop_duplicates(subset=['Material','week_No'], keep='first',inplace=True)
+    #         merge_all.to_excel(r'merge_all.xlsx',index=False)
+    #         # 去重复
+    #         merge_all.drop_duplicates(subset=['Material','week_No'], keep='first',inplace=True)
         merge_value = merge_all.copy()
         merge_value = pd.merge(merge_value,WeeklyOrder,on=["Material","JNJ_Date","week_No"],
                                how='outer')
@@ -4058,7 +3814,7 @@ def Access_tracking():
         style_value.configure("MyStyle.Treeview", rowheight=50, font=("黑体",11))
         treeview_value = ttk.Treeview(frame, height=4, show="headings",columns=columns,
                                       style='MyStyle.Treeview')
-#         treeview_value = ttk.Treeview(frame, height=4, show="headings",columns=columns)
+    #         treeview_value = ttk.Treeview(frame, height=4, show="headings",columns=columns)
         treeview_value.place(x=300,y=60)
 
         # 表示列,不显示
@@ -4080,7 +3836,7 @@ def Access_tracking():
                                 "{:,}".format(int(merge_value[merge_value.columns[5]].iloc[i]))
                                          )
                                  )
-#         print('{:.0%}'.format(merge_value[merge_value.columns[1]].iloc[2]))
+    #         print('{:.0%}'.format(merge_value[merge_value.columns[1]].iloc[2]))
         treeview_value.insert('',len(merge_value)-1, 
                               values=(merge_value[merge_value.columns[0]].iloc[len(merge_value)-1],
                       '{:.0%}'.format(merge_value[merge_value.columns[1]].iloc[len(merge_value)-1]),
@@ -4136,7 +3892,7 @@ def Access_tracking():
                                    "RepWeek_QTYW4":"W4","FCST_state":"预测状态"},inplace=True)
 
         
-#         print(merge_view)
+    #         print(merge_view)
         # ------------补货计划与实际到货显示--------------#
         columns_view = list(merge_view.columns)
         # 设置标题、字体、行高等样式
@@ -4187,7 +3943,7 @@ def Access_tracking():
                 tag = "evenrow"
             else:
                 tag = "oddrow"
-#             print("{:,}".format(int(merge_view["W1"].iloc[i])))
+    #             print("{:,}".format(int(merge_view["W1"].iloc[i])))
             treeview_view.insert('', i,
                                  values=(merge_view[merge_view.columns[0]].iloc[i],
                                          merge_view[merge_view.columns[1]].iloc[i],
@@ -4435,7 +4191,7 @@ def rolling_rep():
                     lb_week_Backorder = Label(frame,text="更新至 "+wk_No_Backorder,font=('黑体',10),
                                               bg='WhiteSmoke',fg='DimGray',anchor='w',height=2)
                     lb_week_Backorder.place(x=280,y=55)
-#                     acl_rolling() # 同步更新计算
+    #                     acl_rolling() # 同步更新计算
                 else:
                     # 维护主数据
                     to_updata = pd.DataFrame(data={},columns=['规格型号','包装规格','分类Level3',
@@ -4512,7 +4268,7 @@ def rolling_rep():
                     lb_week_Inbound = Label(frame,text="更新至 "+wk_No_Inbound,font=('黑体',10),
                                             bg='WhiteSmoke',fg='DimGray',anchor='w',height=2)
                     lb_week_Inbound.place(x=280,y=95)
-#                     acl_rolling()
+    #                     acl_rolling()
                 else:
                     # 维护主数据
                     to_updata = pd.DataFrame(data={},columns=['规格型号','包装规格','分类Level3',
@@ -4588,7 +4344,7 @@ def rolling_rep():
                     lb_week_Order = Label(frame,text="更新至 "+wk_No_Order,font=('黑体',10),
                                           bg='WhiteSmoke',fg='DimGray',anchor='w',height=2)
                     lb_week_Order.place(x=280,y=135)
-#                     acl_rolling()
+    #                     acl_rolling()
                 else:
                     # 维护主数据
                     to_updata = pd.DataFrame(data={},columns=['规格型号','包装规格','分类Level3',
@@ -4818,15 +4574,15 @@ def rolling_rep():
         # 调整后的需求数据
         SQL_AdjustFCSTDemand = "SELECT Material,FCST_Demand1 From AdjustFCSTDemand"+         " WHERE JNJ_Date = '"+JNJ_Month(1)[0]+"';"
         AdjustFCSTDemand = PrismDatabaseOperation.Prism_select(SQL_AdjustFCSTDemand)
-#         if AdjustFCSTDemand.empty:
-#             lack.append("二级需求")
+    #         if AdjustFCSTDemand.empty:
+    #             lack.append("二级需求")
 
         # 安全库存
         # 出库数据3个月
         SQL_Outbound = "SELECT * From Outbound WHERE JNJ_Date = '"+JNJ_Month(3)[0]+         "' OR JNJ_Date = '"+JNJ_Month(3)[1]+"' OR JNJ_Date = '"+JNJ_Month(3)[2]+"';"
         Outbound = PrismDatabaseOperation.Prism_select(SQL_Outbound)
-#         if Outbound.empty:
-#             lack.append("出库数据")
+    #         if Outbound.empty:
+    #             lack.append("出库数据")
         Outbound = Outbound.pivot_table(index='Material',columns='JNJ_Date')
         Outbound.reset_index(inplace=True)
         Outbound_QTY_col = [] # 换列名，方便直接取出相应月份的数据
@@ -4844,20 +4600,20 @@ def rolling_rep():
         # 上月Intransit
         SQL_Intransit = "SELECT Material,Intransit_QTY From Intransit WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
         Intransit = PrismDatabaseOperation.Prism_select(SQL_Intransit)
-#         if Intransit.empty:
-#             lack.append("上个月在途")
+    #         if Intransit.empty:
+    #             lack.append("上个月在途")
 
         # 上月Onhand_QTY
         SQL_Onhand = "SELECT Material,Onhand_QTY From Onhand WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
         Onhand = PrismDatabaseOperation.Prism_select(SQL_Onhand)
-#         if Onhand.empty:
-#             lack.append("上个月可发")
+    #         if Onhand.empty:
+    #             lack.append("上个月可发")
 
         # 上月Putaway
         SQL_Putaway = "SELECT Material,Putaway_QTY From Putaway WHERE JNJ_Date = '"+         JNJ_Month(1)[0]+"';"
         Putaway = PrismDatabaseOperation.Prism_select(SQL_Putaway)
-#         if Putaway.empty:
-#             lack.append("上个月预入库")
+    #         if Putaway.empty:
+    #             lack.append("上个月预入库")
 
         # 读取补货计划
         SQL_Rep_plan = "SELECT Material,RepWeek_QTY,week_No FROM"+         " AdjustRollingRepPlan WHERE JNJ_Date = '"+next_month+"';"
@@ -5427,13 +5183,13 @@ def rolling_rep():
                           relativedelta(months=1)).strftime("%Y%m") # 下个月时间 
                 for i in range(4):
                     SQL_update = "UPDATE AdjustRollingRepPlan SET RepWeek_QTY = "+                     str(df_now.iloc[0,i+2].replace(",",""))+" WHERE JNJ_Date='"+next_month+                     "' AND Material='"+df_now["规格型号"].iloc[0]+"' AND week_No='"+                     df_now.columns[i+2]+"';"
-#                     print(SQL_update)
+    #                     print(SQL_update)
                     PrismDatabaseOperation.Prism_update(SQL_update)
-#                 # 更新备注
-#                 SQL_update_remark = "UPDATE AdjustRollingRepPlan SET Rep_Remark = '"+ \
-#                 str(df_now.iloc[0,8])+"' WHERE JNJ_Date='"+next_month+"' AND Material='"+ \
-#                 df_now["规格型号"].iloc[0]+"' AND week_No='"+df_now.columns[4]+"';"
-#                 Prism_db.Prism_update(SQL_update_remark)
+    #                 # 更新备注
+    #                 SQL_update_remark = "UPDATE AdjustRollingRepPlan SET Rep_Remark = '"+ \
+    #                 str(df_now.iloc[0,8])+"' WHERE JNJ_Date='"+next_month+"' AND Material='"+ \
+    #                 df_now["规格型号"].iloc[0]+"' AND week_No='"+df_now.columns[4]+"';"
+    #                 Prism_db.Prism_update(SQL_update_remark)
                 
                 # 刷新界面,直接将修改好的信息复制到主界面
                 for i in range(5):
@@ -5558,9 +5314,7 @@ class content:
         btn_Set = Button(window,image=img_btn_Set_png_1,borderwidth=0,height=45,width=45,
                          command=content.Five_content)
         btn_Set.place(x=17,y=640)
-#         btn_More = Button(window,image=img_btn_More_png_1,borderwidth=0,height=42,width=42,
-#                          command=content.Six_content)
-#         btn_More.place(x=17,y=640)
+
         
         # 显示提示文本
         CreateToolTip(btn_One_2, "更新数据")
@@ -5568,7 +5322,7 @@ class content:
         CreateToolTip(btn_Three, "补货拆周")
         CreateToolTip(btn_Four, "订单追踪")
         CreateToolTip(btn_Set, "设置")
-#         CreateToolTip(btn_More, "更多")
+    #         CreateToolTip(btn_More, "更多")
         
     # 一级目录按钮-2及其相应事件：需求预测
     def Two_content():
@@ -5582,20 +5336,11 @@ class content:
             # 内容
             frame_1 = Frame(window,height=655,width=1015,bg='WhiteSmoke')
             frame_1.place(x=267,y=61)
-#             btn_modify_history = Button(frame_1,text='修改历史数据',font=('黑体',12),bg='grey',
-#                       fg='DimGray',width=18,height=2,borderwidth=2,compound=CENTER)
-#             btn_modify_history.place(x=100,y=5)
-#             btn_modify_model = Button(frame_1,text='修改模型数据',font=('黑体',12),bg='grey',
-#                                   fg='DimGray',width=18,height=2,borderwidth=2,compound=CENTER)
-#             btn_modify_model.place(x=300,y=5)
             btn_forecast = Button(frame_1,text='开始预测',command=forecast,font=('黑体',12,'bold'),
                                   bg='slategrey',fg='white',width=15,borderwidth=5,compound=CENTER)
             btn_forecast.place(x=650,y=15)
         
         frame = Frame(window, height=200, width=185,bg='Gainsboro')     
-#         btn_clean = Button(frame,text='需求数据清洗',font=('黑体',12),bg='grey',
-#                           fg='DimGray',width=18,height=2,borderwidth=0,compound=CENTER)
-#         btn_clean.place(x=0,y=100)
         btn_Mape = Button(frame,text='Mape&Bias',command=MapeBias,
                                  font=s_1()[2],fg=s_1()[4],width=s_1()[6],height=s_1()[7],
                                  borderwidth=s_1()[5],compound=CENTER)
@@ -5623,9 +5368,7 @@ class content:
         btn_Set = Button(window,image=img_btn_Set_png_1,borderwidth=0,height=45,width=45,
                          command=content.Five_content)
         btn_Set.place(x=17,y=640)
-#         btn_More = Button(window,image=img_btn_More_png_1,borderwidth=0,height=42,width=42,
-#                          command=content.Six_content)
-#         btn_More.place(x=17,y=640)
+
                 
         # 显示提示文本
         CreateToolTip(btn_One, "更新数据")
@@ -5633,7 +5376,7 @@ class content:
         CreateToolTip(btn_Three, "补货拆周")
         CreateToolTip(btn_Four, "订单追踪")
         CreateToolTip(btn_Set, "设置")
-#         CreateToolTip(btn_More, "更多")
+
     
     # 一级目录按钮-3及其相应事件：补货计划
     def Three_content():
@@ -5666,9 +5409,7 @@ class content:
         btn_Set = Button(window,image=img_btn_Set_png_1,borderwidth=0,height=45,width=45,
                          command=content.Five_content)
         btn_Set.place(x=17,y=640)
-#         btn_More = Button(window,image=img_btn_More_png_1,borderwidth=0,height=42,width=42,
-#                          command=content.Six_content)
-#         btn_More.place(x=17,y=640)
+
         
         # 显示提示文本
         CreateToolTip(btn_One, "更新数据")
@@ -5676,7 +5417,7 @@ class content:
         CreateToolTip(btn_Three_2, "补货拆周")
         CreateToolTip(btn_Four, "订单追踪")
         CreateToolTip(btn_Set, "设置")
-#         CreateToolTip(btn_More, "更多")
+    #         CreateToolTip(btn_More, "更多")
     
     # 一级目录按钮-4及其相应事件：进出追踪
     def Four_content():
@@ -5708,9 +5449,7 @@ class content:
         btn_Set = Button(window,image=img_btn_Set_png_1,borderwidth=0,height=45,width=45,
                          command=content.Five_content)
         btn_Set.place(x=17,y=640)
-#         btn_More = Button(window,image=img_btn_More_png_1,borderwidth=0,height=42,width=42,
-#                          command=content.Six_content)
-#         btn_More.place(x=17,y=640)
+
         
         # 显示提示文本
         CreateToolTip(btn_One, "更新数据")
@@ -5718,7 +5457,7 @@ class content:
         CreateToolTip(btn_Three, "补货拆周")
         CreateToolTip(btn_Four_2, "订单追踪")
         CreateToolTip(btn_Set, "设置")
-#         CreateToolTip(btn_More, "更多")
+    #         CreateToolTip(btn_More, "更多")
         
     # 一级目录按钮-5及其相应事件：设置
     def Five_content():
@@ -5753,9 +5492,7 @@ class content:
         btn_Set_2 = Button(window,image=img_btn_Set_png_2,borderwidth=0,height=45,width=45,
                            command=content.Five_content)
         btn_Set_2.place(x=17,y=640)
-#         btn_More = Button(window,image=img_btn_More_png_1,borderwidth=0,height=42,width=42,
-#                          command=content.Six_content)
-#         btn_More.place(x=17,y=640)
+
         
         # 显示提示文本
         CreateToolTip(btn_One, "更新数据")
@@ -5763,7 +5500,7 @@ class content:
         CreateToolTip(btn_Three, "补货拆周")
         CreateToolTip(btn_Four, "订单追踪")
         CreateToolTip(btn_Set_2, "设置")
-#         CreateToolTip(btn_More, "更多")
+
 
 
 # 一级目录按钮显示
