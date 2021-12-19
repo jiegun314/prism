@@ -39,7 +39,7 @@ class PrismDatabaseOperation:
         try:
             self.cursor.execute(sql_cmd)
             self.cursor.commit()
-            self.conn.close()
+            # self.conn.close()
         except:
             tkinter.messagebox.showerror("错误","数据更新失败！")
 
@@ -48,7 +48,7 @@ class PrismDatabaseOperation:
         try:
             self.cursor.execute(sql_cmd)
             self.cursor.commit()
-            self.conn.close()
+            # self.conn.close()
         except:
             tkinter.messagebox.showerror("错误","数据删除失败！")
 
@@ -59,9 +59,10 @@ class PrismDatabaseOperation:
                             con=self.conn, 
                             if_exists='append', 
                             index=False)
-            self.conn.close()
+            self.conn.commit()
+            # self.conn.close()
             return True
         except:
-            self.conn.close()
+            # self.conn.close()
             tkinter.messagebox.showerror("错误",db_sheetname+"数据插入失败！")
             return False
